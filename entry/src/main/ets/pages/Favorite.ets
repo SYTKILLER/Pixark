@@ -153,7 +153,6 @@ export struct Favorite {
             NovelListView({
               novelList: favVM.currentNovels,
               onItemClick: (novel: PixivNovel) => {
-                favVM.handleNovelClick(novel)
               },
               onReachEnd: () => { favVM.loadMore(); }
             })
@@ -171,7 +170,6 @@ export struct Favorite {
             NovelListView({
               novelList: favVM.currentNovels,
               onItemClick: (novel: PixivNovel) => {
-                favVM.handleNovelClick(novel)
               },
               onReachEnd: () => { favVM.loadMore(); }
             })

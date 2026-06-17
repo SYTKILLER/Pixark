@@ -4,7 +4,7 @@
 ![HarmonyOS](https://img.shields.io/badge/HarmonyOS-ArkTS-green)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ## ✨ 项目简介
-Pixark 旨在为鸿蒙用户提供原生流畅的插画浏览体验。它基于 ArkTS / TypeScript 开发，深度整合了 HarmonyOS 的分布式能力与 UI 特性。通过 API 模块，Pixark 实现了账号登录、推荐、浏览以及用户互动功能。
+Pixark 旨在为鸿蒙用户提供原生流畅的插画、小说浏览体验。它基于 ArkTS / TypeScript 开发，深度整合了 HarmonyOS 的系统能力与 UI 特性。通过 API 模块，Pixark 实现了账号登录、推荐、浏览以及用户互动功能。
 ## 🚀 核心功能
 - **🔐 登录**
     - 支持账号密码与 Refresh Token 双重登录方式(请确保能够正确访问Pixiv)。

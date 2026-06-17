@@ -1,9 +1,9 @@
 import { createLogger } from '../common/utils/Logger';
 import { pixiv } from '../services/PixivService';
-import { PixivNovel, PrevNovel, SeriesNavigation, TextNovel } from '../services/PixivTypes';
+import { PixivNovel, PrevNovel, SeriesNavigation } from '../services/PixivTypes';
 import { historyVM } from './HistoryViewModel';
 import { UISettings } from '../common/entity/SettingsModel';
-import { ReadingMode, getThemeConfig, isPrevNovel, isTextNovel } from '../common/entity/NovelModel';
+import { ReadingMode, getThemeConfig } from '../common/entity/NovelModel';
 
 const logger = createLogger('NovelDetailVM');
 
@@ -128,12 +128,12 @@ export class NovelDetailViewModel {
     return this.seriesNavigation?.nextNovel || null;
   }
 
-  get prevTitle(): string {
-    return this.prevNovel?.title || '上一篇';
+  get prevTitle(): ResourceStr {
+    return this.prevNovel?.title || $r('app.string.prev_page');
   }
 
-  get nextTitle(): string {
-    return '下一篇';
+  get nextTitle(): ResourceStr {
+    return $r('app.string.next_page');
   }
 
   get isInSeries(): boolean {
@@ -222,7 +222,7 @@ export class NovelDetailViewModel {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
-  formatWordCount(count: number): string {
+  formatWordCount(count: number): ResourceStr {
     if (count < 1000) return `${count}字`;
     if (count < 10000) return `${(count / 1000).toFixed(1)}千字`;
     return `${(count / 10000).toFixed(1)}万字`;

@@ -373,14 +373,6 @@ class FavoriteViewModel implements IIllustSwiperProvider {
     PixState.pageStack.pushPathByName('illust_detail', params, true);
   }
 
-  handleNovelClick(novel: PixivNovel) {
-    const params: NovelDetailParams = {
-      id: novel.id,
-    };
-    // 执行跳转
-    PixState.pageStack.pushPathByName('novel_detail', params, true);
-  }
-
   // --- 加载更多 ---
   async loadMore(): Promise<void> {
     if (this.isLoadingMore || !this.hasMore) return;

@@ -629,8 +629,8 @@
       "value": "项目简介"
     },
     {
-      "name": "project_home",
-      "value": "项目主页"
+      "name": "project",
+      "value": "项目"
     },
     {
       "name": "author_home",
@@ -896,6 +896,42 @@
     {
       "name": "reading_srttings",
       "value": "阅读设置"
+    },
+    {
+      "name": "novel_detail",
+      "value": "小说详情"
+    },
+    {
+      "name": "ai_assisted",
+      "value": "AI辅助"
+    },
+    {
+      "name": "ai_generated",
+      "value": "AI生成"
+    },
+    {
+      "name": "no_caption",
+      "value": "暂无简介"
+    },
+    {
+      "name": "series_works",
+      "value": "系列作品"
+    },
+    {
+      "name": "prev_page",
+      "value": "上一篇"
+    },
+    {
+      "name": "next_page",
+      "value": "下一篇"
+    },
+    {
+      "name": "tripartite_services",
+      "value": "三方服务"
+    },
+    {
+      "name": "view_repo",
+      "value": "查看仓库"
     }
   ]
 }

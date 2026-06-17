@@ -1,4 +1,5 @@
-import { CustomItemInfo, ItemActionType, ItemGroupData, makeItemGroups, MenuOption } from "../../common/entity/CusItemInfo"
+import { CustomItemInfo, ItemActionType, ItemGroupData, makeItemGroups, MenuOption,
+  ThirdPartyLibInfo } from "../../common/entity/CusItemInfo"
 import { CustomListItem } from "../../components/CusItemBuilder"
 import { NaviContainer } from "../../components/NaviContainer"
 import { PixState, _PixState } from "../../entryability/AppState"
@@ -14,7 +15,37 @@ export function AboutPageBuilder() {
 
 @ComponentV2
 struct AboutPage {
+
   private pageStack: NavPathStack = new NavPathStack()
+  // 控制三方库弹窗显示
+  @Local showLibsDialog: boolean = false
+
+  // 三方库数据列表
+  private get thirdPartyLibs(): ThirdPartyLibInfo[] {
+    return [
+      {
+        name: 'Axios',
+        packageName: '@ohos/axios',
+        description: '基于 Axios v1.3.4 适配 HarmonyOS 的 Promise 网络请求库，支持请求/响应拦截器、自动 JSON 转换、请求取消、文件上传下载等特性。',
+        license: 'MIT',
+        url: 'https://ohpm.openharmony.cn/#/cn/detail/@ohos%2Faxios'
+      },
+      {
+        name: 'ImageKnifePro',
+        packageName: '@ohos/imageknifepro',
+        description: '专为 OpenHarmony 打造的高性能图片加载缓存库，核心逻辑下沉至 C/C++ Native 层，支持内存+磁盘二级缓存、图片变换、占位图、自定义下载等。',
+        license: 'Apache-2.0',
+        url: 'https://ohpm.openharmony.cn/#/cn/detail/@ohos%2Fimageknifepro'
+      },
+      {
+        name: 'reflect-metadata',
+        packageName: 'reflect-metadata',
+        description: 'ES7 元数据反射提案的 polyfill 实现，允许为类、方法、属性附加元数据并在运行时读取，常用于依赖注入、装饰器元信息等场景。',
+        license: 'Apache-2.0',
+        url: 'https://ohpm.openharmony.cn/#/cn/detail/reflect-metadata'
+      }
+    ]
+  }
 
   private get itemList(): CustomItemInfo[] {
     return [
@@ -58,7 +89,7 @@ struct AboutPage {
       }),
 
       // 链接组
-      new CustomItemInfo({ id: 'links', title: $r('app.string.project_home'), type: ItemActionType.GROUP }),
+      new CustomItemInfo({ id: 'links', title: $r('app.string.project'), type: ItemActionType.GROUP }),
       new CustomItemInfo({
         symbol: $r('sys.symbol.person'),
         title: $r('app.string.author_home'),
@@ -72,6 +103,15 @@ struct AboutPage {
         type: ItemActionType.ROUTER,
         id: 'project_repo',
         onChange: () => { JumpUtil.goToWeb(AppConstants.GITHUB_REPO_URL) }
+      }),
+      new CustomItemInfo({
+        symbol: $r('sys.symbol.guest_light'),
+        title: $r('app.string.tripartite_services'),
+        type: ItemActionType.ROUTER,
+        id: 'tripartite_services',
+        onChange: () => {
+          this.showLibsDialog = true
+        }
       }),
 
       // 贡献者组
@@ -207,6 +247,11 @@ struct AboutPage {
     .width('100%')
     .height('100%')
     .padding({ left: PixState.PageMarginValue, right: PixState.PageMarginValue })
+    .bindSheet(this.showLibsDialog!!, this.ThirdPartyLibsSheet(), {
+      height: '60%',
+      dragBar: true,
+      showClose: false,
+    })
   }
 
   /**
@@ -239,6 +284,126 @@ struct AboutPage {
       .width('100%')
       .padding({ left: 4, top: 8, bottom: 4 })
       .fontColor($r('sys.color.font_secondary'))
+  }
+
+  @Builder ThirdPartyLibsSheet() {
+    Column() {
+      // 顶部标题
+      Row() {
+        Text($r('app.string.tripartite_services'))
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+          .fontColor($r('sys.color.font_primary'))
+        Button({ type: ButtonType.Circle }) {
+          SymbolGlyph($r('sys.symbol.xmark'))
+            .fontSize(16)
+            .fontColor([$r('sys.color.font_secondary')])
+        }
+        .width(32).height(32)
+        .backgroundColor(Color.Transparent)
+        .onClick(() => { this.showLibsDialog = false })
+      }
+      .width('100%')
+      .padding({ left: 16, right: 16, bottom: 12, top: 12 })
+
+      // 库列表
+      Scroll() {
+        Column({ space: 12 }) {
+          ForEach(this.thirdPartyLibs, (lib: ThirdPartyLibInfo, index: number) => {
+            this.LibCard(lib, index)
+          }, (lib: ThirdPartyLibInfo) => lib.packageName)
+          // 底部说明
+          Text('感谢以上开源项目对 HarmonyOS 生态的贡献')
+            .fontSize(12)
+            .fontColor($r('sys.color.font_fourth'))
+            .width('100%')
+            .textAlign(TextAlign.Center)
+            .margin({ top: 8, bottom: 16 })
+        }
+        .width('100%')
+        .padding({ left: 16, right: 16, bottom: PixState.bottomRectHeight + 16 })
+      }
+      .layoutWeight(1)
+      .scrollBar(BarState.Off)
+      .edgeEffect(EdgeEffect.Spring)
+    }
+    .width('100%')
+    .height('100%')
+    .backgroundColor($r('sys.color.background_primary'))
+  }
+
+  /**
+   * 单个三方库卡片
+   */
+  @Builder LibCard(lib: ThirdPartyLibInfo, index: number) {
+    Column({ space: 8 }) {
+      // 库名 + 协议标签
+      Row() {
+        Text(lib.name)
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('sys.color.font_primary'))
+        Text(lib.license)
+          .fontSize(11)
+          .fontColor($r('sys.color.font_tertiary'))
+          .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+          .borderRadius(4)
+          .backgroundColor($r('sys.color.ohos_id_color_hover'))
+          .margin({ left: 8 })
+        Blank()
+        // 序号
+        Text(`${index + 1}`)
+          .fontSize(12)
+          .fontColor($r('sys.color.font_fourth'))
+      }
+      .width('100%')
+
+      // 包名
+      Row({ space: 4 }) {
+        SymbolGlyph($r('sys.symbol.archivebox_fill'))
+          .fontSize(13)
+          .fontColor([$r('sys.color.font_tertiary')])
+        Text(lib.packageName)
+          .fontSize(13)
+          .fontColor($r('sys.color.font_tertiary'))
+          .fontFamily('monospace')
+      }
+      .width('100%')
+
+      // 简介
+      Text(lib.description)
+        .fontSize(13)
+        .lineHeight(20)
+        .fontColor($r('sys.color.font_secondary'))
+        .width('100%')
+
+      // 仓库链接按钮
+      Row() {
+        Button({ type: ButtonType.Normal }) {
+          Row({ space: 4 }) {
+            SymbolGlyph($r('sys.symbol.link'))
+              .fontSize(13)
+              .fontColor([Color.White])
+            Text($r('app.string.view_repo'))
+              .fontSize(13)
+              .fontColor(Color.White)
+          }
+        }
+        .height(32)
+        .borderRadius(16)
+        .padding({ left: 16, right: 16 })
+        .backgroundColor(PixState.currentThemeColor)
+        .onClick(() => { JumpUtil.goToWeb(lib.url) })
+        Blank()
+      }
+      .width('100%')
+      .margin({ top: 4 })
+    }
+    .width('100%')
+    .padding(16)
+    .borderRadius(16)
+    .backgroundColor($r('sys.color.background_secondary'))
   }
 
 }
