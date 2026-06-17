@@ -5,7 +5,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import { toastUtil } from '../common/utils/ToastUtils';
 import { MockData } from '../services/MockData';
 import { pixiv } from '../services/PixivService';
-import { IIllustSwiperProvider } from '../common/entity/DetailEntity';
+import { IIllustSwiperProvider, NovelDetailParams } from '../common/entity/DetailEntity';
 import { appSettings } from '../common/entity/SettingsModel';
 
 const logger = createLogger('HomeViewModel')
@@ -50,6 +50,7 @@ class HomeViewModel implements IIllustSwiperProvider {
   async loadMore(): Promise<void> { await this.loadMoreRecommended(); }
 
   hideCard(id: number) { this.hiddenIllustId = id; }
+
   restoreIllustVisibility() { this.hiddenIllustId = -1; }
 
   async loadHomeData() {

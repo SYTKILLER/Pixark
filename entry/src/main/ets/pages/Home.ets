@@ -91,7 +91,6 @@ export struct Home {
                 nestedScroll: homeViewModel.nestedScrollOptions,
                 novelList: homeViewModel.recommendedNovels,
                 onItemClick: (novel: PixivNovel) => {
-                  // TODO: 跳转小说详情
                 },
                 onReachEnd: () => {
                   homeViewModel.loadMoreRecommended();

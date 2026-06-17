@@ -38,7 +38,7 @@ struct NovelDetail {
   build() {
     Stack() {
       NaviContainer({
-        title: this.isReadingMode ? undefined : '小说详情',
+        title: this.isReadingMode ? undefined : $r('app.string.novel_detail'),
         onReady: (ctx: NavDestinationContext) => {
           this.pageStack = ctx.pathStack;
           let params: NovelDetailParams | null = null;
@@ -223,7 +223,7 @@ struct NovelDetail {
       Blank()
       // AI标识
       if (this.vm!.novelInfo?.novel_ai_type === 2) {
-        Text('AI辅助')
+        Text($r('app.string.ai_assisted'))
           .fontSize(11)
           .fontColor($r('sys.color.font_tertiary'))
           .padding({
@@ -235,7 +235,7 @@ struct NovelDetail {
           .borderRadius(4)
           .backgroundColor('#18007DFF')
       } else if (this.vm!.novelInfo?.novel_ai_type === 3) {
-        Text('AI生成')
+        Text($r('app.string.ai_generated'))
           .fontSize(11)
           .fontColor($r('sys.color.font_tertiary'))
           .padding({
@@ -286,7 +286,7 @@ struct NovelDetail {
   // 简介
   @Builder
   CaptionSection() {
-    Text(this.vm!.novelInfo?.caption || '暂无简介')
+    Text(this.vm!.novelInfo?.caption || $r('app.string.no_caption'))
       .fontSize(14)
       .fontColor($r('sys.color.font_secondary'))
       .maxLines(5)
@@ -298,7 +298,7 @@ struct NovelDetail {
   SeriesSection() {
     Row() {
       Column({ space: 4 }) {
-        Text('系列作品').fontSize(12)
+        Text($r('app.string.series_works')).fontSize(12)
           .fontColor($r('sys.color.font_tertiary'));
         Text(this.vm!.novelInfo?.series?.title || '')
           .fontSize(15)
@@ -323,7 +323,6 @@ struct NovelDetail {
           .fontSize(19);
         Text($r('app.string.check_out_comments')).fontSize(16)
       }
-
       Blank()
       if ((this.vm!.novelInfo?.total_comments ?? 0) > 0) {
         Text(`${this.vm!.novelInfo?.total_comments}`)

@@ -1,6 +1,7 @@
 import { PixivNovel, PixivTag } from '../services/PixivTypes'
 import { PixivImageComponent } from './PixivImage'
 import { PixState } from '../entryability/AppState'
+import { NovelDetailParams } from '../common/entity/DetailEntity'
 
 
 /**
@@ -113,6 +114,11 @@ export struct NovelListView {
     .width('100%')
     .padding({ top: 12, bottom: 12 })
     .onClick(() => {
+      const params: NovelDetailParams = {
+        id: novel.id,
+      };
+      // 执行跳转
+      PixState.pageStack.pushPathByName('novel_detail', params, true);
       this.onItemClick(novel)
     })
   }

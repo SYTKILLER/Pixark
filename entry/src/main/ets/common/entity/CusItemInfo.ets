@@ -199,6 +199,22 @@ export interface ItemGroupData {
 }
 
 /**
+ * 三方库信息
+ */
+export interface ThirdPartyLibInfo {
+  /** 库名 */
+  name: string;
+  /** 包名（ohpm / npm） */
+  packageName: string;
+  /** 简介 */
+  description: string;
+  /** 开源协议 */
+  license: string;
+  /** 仓库 / 主页地址 */
+  url: string;
+}
+
+/**
  * 工具函数：将扁平数组转换为分组数组
  */
 export function makeItemGroups(data: CustomItemInfo[]): ItemGroupData[] {
@@ -216,3 +232,4 @@ export function makeItemGroups(data: CustomItemInfo[]): ItemGroupData[] {
     return result;
   }, []);
 }
+
