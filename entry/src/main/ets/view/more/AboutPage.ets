@@ -105,7 +105,7 @@ struct AboutPage {
         onChange: () => { JumpUtil.goToWeb(AppConstants.GITHUB_REPO_URL) }
       }),
       new CustomItemInfo({
-        symbol: $r('sys.symbol.guest_light'),
+        symbol: $r('sys.symbol.person_2'),
         title: $r('app.string.tripartite_services'),
         type: ItemActionType.ROUTER,
         id: 'tripartite_services',
