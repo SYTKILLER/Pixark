@@ -1,5 +1,10 @@
 name: HarmonyOS App Build
 
+# ========== ⚠️ 当前已停用 ==========
+# 本文件已改名为 master.yml.disabled（GitHub 不会执行），当前采用「本地打包 + 手动发布 Release」。
+# 重新启用方法：改回 master.yml，并按下方 TODO 完成工具链自托管（compatibleSdkVersion 6.1.1(24)
+# 需要 SDK 6.1.1，公开镜像最高只有 6.1.0，必须从华为官方下载中心获取 6.1.1 后上传到自己的 Release）。
+
 # ========== 工具链配置 ==========
 # 命令行工具版本必须 >= 工程 compatibleSdkVersion（当前 build-profile.json5 为 6.1.1(24)）。
 # 6.1.1 版本没有公开镜像，需从华为官方下载中心获取 Linux 版后上传到本仓库的 GitHub Release，
