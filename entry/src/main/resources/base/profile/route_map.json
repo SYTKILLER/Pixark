@@ -1,0 +1,114 @@
+{
+  "routerMap": [
+    {
+      "name": "web_login",
+      "pageSourceFile": "src/main/ets/view/login/WebLogin.ets",
+      "buildFunction": "WebLoginPage"
+    },
+    {
+      "name": "register",
+      "pageSourceFile": "src/main/ets/view/login/RegisterPage.ets",
+      "buildFunction": "RegisterPage"
+    },
+    {
+      "name": "token_login",
+      "pageSourceFile": "src/main/ets/view/login/TokenLogin.ets",
+      "buildFunction": "TokenLoginPage"
+    },
+    {
+      "name": "illust_detail",
+      "pageSourceFile": "src/main/ets/view/IllustDetailPage.ets",
+      "buildFunction": "IllustDetailBuilder"
+    },
+    {
+      "name": "user_detail",
+      "pageSourceFile": "src/main/ets/view/user/UserDetailPage.ets",
+      "buildFunction": "UserDetailBuilder"
+    },
+    {
+      "name": "user_bookmark",
+      "pageSourceFile": "src/main/ets/view/user/UserBookmarkPage.ets",
+      "buildFunction": "UserBookmarkBuilder"
+    },
+    {
+      "name": "search_page",
+      "pageSourceFile": "src/main/ets/pages/Search.ets",
+      "buildFunction": "SearchContentBuilder"
+    },
+    {
+      "name": "searching_page",
+      "pageSourceFile": "src/main/ets/view/SearchingPage.ets",
+      "buildFunction": "SearchingPageBuilder"
+    },
+    {
+      "name": "download_manager",
+      "pageSourceFile": "src/main/ets/view/more/DownloadManager.ets",
+      "buildFunction": "DownloadManagerBuilder"
+    },
+    {
+      "name": "keyword_manager",
+      "pageSourceFile": "src/main/ets/view/more/KeywordManagerPage.ets",
+      "buildFunction": "KeywordManagerPageBuilder"
+    },
+    {
+      "name": "user_accounts",
+      "pageSourceFile": "src/main/ets/view/user/UserAccounts.ets",
+      "buildFunction": "UserAccountsBuilder"
+    },
+    {
+      "name": "login",
+      "pageSourceFile": "src/main/ets/pages/Login.ets",
+      "buildFunction": "LoginBuilder"
+    },
+    {
+      "name": "account_info",
+      "pageSourceFile": "src/main/ets/view/user/AccountInfo.ets",
+      "buildFunction": "AccountInfoBuilder"
+    },
+    {
+      "name": "user_settings",
+      "pageSourceFile": "src/main/ets/view/more/UserSettings.ets",
+      "buildFunction": "UserSettingsBuilder"
+    },
+    {
+      "name": "file_save_format",
+      "pageSourceFile": "src/main/ets/view/more/SaveFormat.ets",
+      "buildFunction": "SaveFormatBuilder"
+    },
+    {
+      "name": "share_format",
+      "pageSourceFile": "src/main/ets/view/more/ShareFormat.ets",
+      "buildFunction": "ShareFormatBuilder"
+    },
+    {
+      "name": "illust_history",
+      "pageSourceFile": "src/main/ets/view/more/PixHistory.ets",
+      "buildFunction": "PixHistoryBuilder"
+    },
+    {
+      "name": "about",
+      "pageSourceFile": "src/main/ets/view/more/AboutPage.ets",
+      "buildFunction": "AboutPageBuilder"
+    },
+    {
+      "name": "app_data",
+      "pageSourceFile": "src/main/ets/view/more/AppData.ets",
+      "buildFunction": "AppDataBuilder"
+    },
+    {
+      "name": "novel_detail",
+      "pageSourceFile": "src/main/ets/view/NovelDetailPage.ets",
+      "buildFunction": "NovelDetailBuilder"
+    },
+    {
+      "name": "collection",
+      "pageSourceFile": "src/main/ets/view/more/CollectionPage.ets",
+      "buildFunction": "CollectionPageBuilder"
+    },
+    {
+      "name": "follow",
+      "pageSourceFile": "src/main/ets/view/more/FollowPage.ets",
+      "buildFunction": "FollowPageBuilder"
+    }
+  ]
+}

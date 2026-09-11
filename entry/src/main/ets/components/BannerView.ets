@@ -1,0 +1,117 @@
+
+import { ConfigurationConstant } from "@kit.AbilityKit";
+import { BaseDataSource } from "../viewmodel/BaseDataSource";
+import { PixivImageComponent } from "./PixivImage";
+import { SpotlightArticle } from "../services/PixivTypes";
+import { HomeBannerBannerMargin, HomeBannerDisplayCount } from "../common/utils/breakpoint/BreakPoint";
+import { PixState } from "../entryability/AppState";
+import { appSettings, UISettings } from "../common/entity/SettingsModel";
+
+// 主页轮播图
+@ComponentV2
+export struct BannerView {
+
+  @Param swiperMargin: Length = 12
+  @Param @Require bannerList: SpotlightArticle[]
+
+  private bannerDataSource: BannerDataSource = new BannerDataSource([])
+
+  @Monitor('bannerList')
+  onBannerListChange() {
+    this.bannerDataSource.pushData(this.bannerList)
+  }
+
+  aboutToAppear(): void {
+    this.bannerDataSource.pushData(this.bannerList)
+  }
+
+  build() {
+    Swiper() {
+      LazyForEach(this.bannerDataSource, (item: SpotlightArticle, index: number) => {
+        this.BannerItem(item)
+      }, (item: SpotlightArticle) => item.id + item.title)
+    }.loop(true)
+    .width('100%')
+    .autoPlay(true)
+    .interval(6000)
+    .indicator(false)
+    .prevMargin(HomeBannerBannerMargin(PixState.widthBp))
+    .nextMargin(HomeBannerBannerMargin(PixState.widthBp))
+    .displayCount(HomeBannerDisplayCount(PixState.widthBp))
+  }
+
+  // 轮播图项
+  @Builder BannerItem(article: SpotlightArticle) {
+    Stack({ alignContent: Alignment.BottomStart }) {
+      // 封面
+      PixivImageComponent({
+        imageUrl: article.thumbnail,
+        imageBorder: { radius: 16 }
+      })
+        .layoutWeight(1)
+        .aspectRatio(1.75)
+      // 底部渐变遮罩（压字）
+      Row()
+        .zIndex(10)
+        .width('100%')
+        .borderRadius(16)
+        .aspectRatio(1.75)
+        .linearGradient({
+          angle: 180,
+          colors: [['#00000000', 0.35], ['#99000000', 1.0]]
+        })
+      // 标题
+      Text(article.title)
+        .fontColor(Color.White)
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .padding(14)
+        .maxLines(1)
+        .zIndex(11)
+        .textOverflow({ overflow: TextOverflow.Ellipsis })
+        .alignSelf(ItemAlign.Start)
+    }
+    .clip(true)
+    .padding({ top: 16, bottom: 16, left: 9, right: 9 })
+    .onClick(() => {
+      console.log(' 点击图片 ')
+
+    })
+    .margin(({ left: this.swiperMargin, right: this.swiperMargin }))
+  }
+}
+
+class BannerDataSource extends BaseDataSource<SpotlightArticle> {
+  private dataArray: SpotlightArticle[] = []
+
+  public totalCount(): number {
+    return this.dataArray.length
+  }
+
+  public getData(index: number): SpotlightArticle {
+    return this.dataArray[index]
+  }
+
+  public addData(index: number, data: SpotlightArticle): void {
+    this.dataArray.splice(index, 0, data)
+    this.notifyDataAdd(index)
+  }
+
+  public pushData(data: SpotlightArticle[]): void {
+    this.dataArray = data
+    this.refresh()
+  }
+
+  // 删除全部数据
+  public clear(): void {
+    this.empty()
+    this.refresh()
+  }
+
+  public empty(): void {
+    this.dataArray = []
+  }
+  public refresh(): void {
+    this.notifyDataReload()
+  }
+}

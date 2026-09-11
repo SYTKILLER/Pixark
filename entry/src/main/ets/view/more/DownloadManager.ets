@@ -1,0 +1,397 @@
+import { PixState, _PixState } from "../../entryability/AppState";
+import { createLogger } from "../../common/utils/Logger";
+import { DownloadsViewModel, downloaderVM } from "../../viewmodel/DownloadsViewModel";
+import { SegmentButtonV2Items, SymbolGlyphModifier, TabSegmentButtonV2 } from "@kit.ArkUI";
+import { request } from "@kit.BasicServicesKit";
+import DownloadRecordInfo from "../../common/entity/DownloadRecordInfo";
+import { DetailPageParams } from "../../common/entity/DetailEntity";
+import { toastUtil } from "../../common/utils/ToastUtils";
+import { NaviContainer } from "../../components/NaviContainer";
+import { PixivImageComponent } from "../../components/PixivImage";
+import { appSettings } from "../../common/entity/SettingsModel";
+import { EmptyStateView, EditBottomBar } from "../../components/CommonWidgets";
+
+const logger = createLogger('DownloadManager');
+
+
+@Builder
+export function DownloadManagerBuilder() {
+  DownloadManager()
+}
+
+
+@ComponentV2
+struct DownloadManager {
+
+  @Local showMenu: boolean = false
+  @Local dVM: DownloadsViewModel = downloaderVM
+  private pageStack: NavPathStack = new NavPathStack()
+  private panOptionL: PanGestureOptions = new PanGestureOptions({ direction: PanDirection.Left })
+  private panOptionR: PanGestureOptions = new PanGestureOptions({ direction: PanDirection.Right })
+
+  private downloadTabItems: SegmentButtonV2Items = new SegmentButtonV2Items([
+    { text: $r('app.string.tasks') },
+    { text: $r('app.string.downloading') },
+    { text: $r('app.string.completed') },
+    { text: $r('app.string.fail') }
+  ]);
+
+  aboutToAppear(): void {
+    const context = _PixState.Context;
+    // 初始化下载目录
+    this.dVM.initDownLoad(context);
+    // 刷新列表数据
+    this.dVM.fetchSysTask();
+  }
+
+  build() {
+    NaviContainer({
+      title: $r('app.string.download_manage'),
+      showMenu: this.showMenu,
+      buttons: this.buttons(),
+      content: () => {
+        this.Content()
+      },
+      menusBuilder: () => {
+        this.menusBuilder()
+      },
+      onReady: (ctx) => {
+        this.pageStack = ctx.pathStack
+      },
+      onBackPressed: () => {
+        if (this.dVM.isEditMode) {
+          toastUtil.animateTo({ duration: 350 }, () => {
+            this.dVM.toggleEditMode()
+          })
+          return true
+        } else {
+          return false
+        }
+      }
+    })
+  }
+
+  @Builder
+  Content() {
+    // 筛选栏
+    Row() {
+      TabSegmentButtonV2({
+        items: this.downloadTabItems,
+        selectedIndex: this.dVM.currentPage!!,
+        enableStateAnimation: true,
+        onItemClicked: (tab) => {
+          toastUtil.animateTo({ duration: 300, curve: Curve.EaseInOut }, () => {
+            this.dVM.currentPage = tab;
+          })
+        }
+      })
+    }
+    .padding({ left: PixState.PageMarginValue, right: PixState.PageMarginValue })
+    .width('100%')
+    // 列表区域
+    List({ space: 8 }) {
+      if (this.dVM.displayList.length === 0) {
+        ListItem() {
+          EmptyStateView({
+            icon: $r('sys.symbol.arrow_down_circle'),
+            message: $r('app.string.no_data')
+          })
+        }
+      }
+      ForEach(this.dVM.displayList, (item: DownloadRecordInfo) => {
+        ListItem() {
+          Row() {
+            if (this.dVM.isEditMode) {
+              Checkbox()
+                .select(this.dVM.isSelected(item.task_id))
+                .shape(CheckBoxShape.CIRCLE)
+                .margin({ right: 12 })
+            }
+            Column({ space: 5 }) {
+              Row() {
+                // 左侧：作品信息
+                this.TitleBuilder(item)
+                // 右侧：状态与操作
+                if (!this.dVM.isEditMode) {
+                  Row({ space: 8 }) {
+                    if (item.status === request.agent.State.COMPLETED) {
+                      // 保存标志（仅当沙箱有文件时显示）
+                      if (this.dVM.isFileInSandbox(item.filePath)) {
+                        Button({ type: ButtonType.Circle }) {
+                          SymbolGlyph($r('sys.symbol.save'))
+                            .fontSize(18)
+                            .fontColor([$r('sys.color.ohos_id_color_primary')])
+                        }
+                        .backgroundColor(Color.Transparent)
+                        .onClick(() => {
+                          // 点击触发手动保存
+                          this.dVM.manualSaveToGallery(item);
+                        })
+                      }
+                      // 完成标志
+                      SymbolGlyph($r('sys.symbol.checkmark_circle_fill'))
+                        .fontSize(20)
+                        .fontColor([$r('sys.color.ohos_id_color_palette4')])
+                    } else if (item.status === request.agent.State.RUNNING || item.status === request.agent.State.RETRYING) {
+                      // 下载中：显示进度和暂停
+                      Text(item.progress.toString() || '0%')
+                        .fontSize(14)
+                        .fontColor($r('sys.color.ohos_id_color_emphasize'))
+
+                      Button({ type: ButtonType.Circle }) {
+                        SymbolGlyph($r('sys.symbol.pause_fill'))
+                          .fontSize(18)
+                          .fontColor([$r('sys.color.ohos_id_color_primary')])
+                      }
+                      .backgroundColor(Color.Transparent)
+                      .onClick(() => {
+                        this.dVM.pauseTask(item.task_id);
+                      })
+                    } else if (item.status === request.agent.State.PAUSED) {
+                      // 暂停：继续
+                      Button($r('app.string.continue'))
+                        .fontSize(14)
+                        .height(32)
+                        .onClick(() => {
+                          this.dVM.resumeTask(item.task_id);
+                        })
+                    } else if (item.status === request.agent.State.FAILED || item.status === request.agent.State.STOPPED) {
+                      // 失败/停止：重试
+                      Button({ type: ButtonType.Circle }) {
+                        SymbolGlyph($r('sys.symbol.arrow_clockwise'))
+                          .fontSize(18)
+                          .fontColor([$r('sys.color.ohos_id_color_primary')])
+                      }
+                      .backgroundColor(Color.Transparent)
+                      .onClick(() => {
+                        this.dVM.restartTask(item.task_id);
+                      })
+                      // 删除
+                      Button({ type: ButtonType.Circle }) {
+                        SymbolGlyph($r('sys.symbol.trash_fill'))
+                          .fontSize(18)
+                          .fontColor([Color.Red])
+                      }
+                      .backgroundColor(Color.Transparent)
+                      .onClick(() => this.dVM.deleteOneTask(item))
+                    } else {
+                      // 等待中
+                      Text($r('app.string.in_line'))
+                        .fontSize(14)
+                        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
+                    }
+                  }
+                }
+              }
+              .width('100%')
+              if (item.status == request.agent.State.RUNNING) {
+                Progress({ value: item.progress, type: ProgressType.Linear })
+                  .color($r('app.color.brand'))
+                  .style({ strokeWidth: 6 })
+              }
+            }
+          }
+          .borderRadius(16)
+          .backgroundColor($r('app.color.card_bg'))
+          .padding({ left: 16, right: 16, top: appSettings.show_thumbnail ? 4 : 16, bottom: appSettings.show_thumbnail ? 4 : 16 })
+        }
+        .onClick(() => {
+          if (!this.dVM.isEditMode) {
+            // 打开插画详情
+            this.openIllust(item.illust_id);
+          } else {
+            this.dVM.toggleSelect(item.task_id);
+          }
+        })
+        .swipeAction(this.dVM.isEditMode ? undefined : {
+          end: { builder: () => { this.DeleteSwipeButton(item) } }
+        })
+        // 组件出现时的动画 (透明度从 0 到 1)
+        .transition({
+          type: TransitionType.Insert,
+          opacity: 0,
+        })
+        // 组件消失时的动画 (透明度从 1 到 0，同时轻微缩小)
+        .transition({
+          type: TransitionType.Delete,
+          opacity: 0,
+          scale: { x: 0.95, y: 0.95 }
+        })
+      }, (item: DownloadRecordInfo) => item.task_id + item.status + item.progress + this.dVM.isFileInSandbox(item.filePath))
+    }
+    .width('100%')
+    .layoutWeight(1)
+    .padding({ left: 16, right: 16, top: 8 })
+    .contentEndOffset(PixState.bottomRectHeight + (PixState.widthBp == 2 ? 56 : 0) || 16)
+    // 左滑手势
+    .gesture(
+      PanGesture(this.panOptionL)
+        .onActionStart((event: GestureEvent) => {
+          if (event) {
+            const targetPage = this.dVM.currentPage == 3 ? 0 : this.dVM.currentPage + 1;
+            toastUtil.animateTo({ duration: 300, curve: Curve.EaseInOut }, () => {
+              this.dVM.currentPage = targetPage;
+            })
+          }
+        }),
+    )
+    // 右滑滑手势
+    .gesture(
+      PanGesture(this.panOptionR)
+        .onActionStart((event: GestureEvent) => {
+          if (event) {
+            const targetPage = this.dVM.currentPage == 0 ? 3 : this.dVM.currentPage - 1;
+            toastUtil.animateTo({ duration: 300, curve: Curve.EaseInOut }, () => {
+              this.dVM.currentPage = targetPage;
+            })
+          }
+        }),
+    )
+    if (this.dVM.isEditMode) {
+      // 悬浮毛玻璃编辑底栏
+      EditBottomBar({
+        selectedCount: this.dVM.getSelectedCount(),
+        totalCount: this.dVM.displayList.length,
+        allSelected: this.dVM.displayList.length > 0 && this.dVM.getSelectedCount() === this.dVM.displayList.length,
+        onSelectAll: (selected: boolean) => {
+          if (selected) {
+            this.dVM.selectAllVisible();
+          } else {
+            this.dVM.deselectAll();
+          }
+        },
+        onDelete: () => {
+          this.dVM.editDelete()
+        }
+      })
+    }
+  }
+
+  // 标题
+  @Builder TitleBuilder(item: DownloadRecordInfo) {
+    Row({ space: 12 }) {
+      // 条件显示缩略图
+      if (appSettings.show_thumbnail && item.thumbnail) {
+        PixivImageComponent({
+          imageUrl: item.thumbnail,
+          imageObjectFit: ImageFit.Auto,
+          needClick: false,
+          imageBorder: { radius: 8 },
+          imageWidth: 39.5,
+          imageHeight: 79
+        })
+      }
+      // 原有标题信息
+      Column() {
+        Text(item.title || $r('app.string.unknown_works'))
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+        Text() {
+          Span(item.artistName || $r('app.string.unknown_artist'))
+          Span(' · ')
+          Span(this.formatTime(item.create_time))
+        }
+        .fontSize(13)
+        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
+        .margin({ top: 4 })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+    }
+    .layoutWeight(1)
+  }
+
+  // 侧滑删除按钮
+  @Builder
+  DeleteSwipeButton(item: DownloadRecordInfo) {
+    SymbolGlyph($r('sys.symbol.trash_fill'))
+      .fontSize(20)
+      .fontColor([Color.Red])
+      .margin({ right: 12, left: 10 })
+      .onClick(() => this.dVM.deleteOneTask(item))
+  }
+
+  @Builder
+  menusBuilder() {
+    Menu() {
+      MenuItem({ content: $r('app.string.pause_all_tasks')})
+        .onClick(() => {
+          // 暂停所有下载任务
+          this.dVM.pauseAllTask()
+        })
+      MenuItem({ content: $r('app.string.resume_all_tasks')})
+        .onClick(() => {
+          // 恢复所有下载任务
+          this.dVM.resumeAllTask()
+        })
+      MenuItem({ content: $r('app.string.restart_all_failed_tasks')})
+        .onClick(() => {
+          // 重试所有失败任务
+          this.dVM.restartAllTask()
+        })
+      MenuItem({ content: $r('app.string.clear_all_completed_tasks')})
+        .onClick(() => {
+          // 清空所有已完成任务
+          this.dVM.clearAllCompletedTasks()
+        })
+    }
+  }
+
+  private buttons(): NavigationMenuItem[] {
+    const btns: NavigationMenuItem[] = [
+      {
+        value: '',
+        symbolIcon: new SymbolGlyphModifier(
+          appSettings.show_thumbnail ? $r('sys.symbol.ohos_photo') : $r('sys.symbol.picture_slash')
+        ),
+        action: () => {
+          this.dVM.toggleThumbnail();
+        }
+      },
+      {
+        value: '',
+        symbolIcon: new SymbolGlyphModifier($r('sys.symbol.square_and_pencil')),
+        action: () => {
+          toastUtil.animateTo({ duration: 350 }, () => {
+            this.dVM.toggleEditMode()
+          })
+        }
+      }
+    ];
+    btns.push({
+      value: '',
+      symbolIcon: new SymbolGlyphModifier($r('sys.symbol.dot_grid_2x2')),
+      action: () => {
+        // 编辑模式下禁用右上角“更多”菜单，防止逻辑交叉
+        if (!this.dVM.isEditMode) {
+          this.showMenu = !this.showMenu
+        } else {
+          return
+        }
+      }
+    });
+
+    return btns;
+  }
+
+  // 打开插画详情
+  private async openIllust(illustID: number | undefined) {
+    if (!illustID) return;
+    const params: DetailPageParams = {
+      id: illustID,
+      fromId: illustID.toString()
+    }
+    // 跳转详情页
+    this.pageStack.pushPathByName('illust_detail', params, true);
+  }
+
+  // 格式化时间
+  private formatTime(timestamp: number): string {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+  }
+
+}

@@ -1,0 +1,33 @@
+# ===== 构建产物与依赖 =====
+/node_modules
+/oh_modules
+**/oh_modules
+**/build
+**/.preview
+/.hvigor
+.cxx
+**/.test
+/.appanalyzer
+
+# ===== DevEco Studio / 本机配置 =====
+/local.properties
+/.idea
+/.clangd
+/.clang-format
+/.clang-tidy
+/.zcode
+
+# ===== 签名材料（证书与密钥，严禁提交）=====
+*.cer
+*.p7b
+*.p12
+*.csr
+*.keystore
+
+# ===== 日志与临时文件 =====
+*.log
+
+# ===== 操作系统杂项 =====
+.DS_Store
+Thumbs.db
+desktop.ini

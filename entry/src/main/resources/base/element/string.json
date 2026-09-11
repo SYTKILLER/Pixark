@@ -1,0 +1,1016 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "PixArk"
+    },
+    {
+      "name": "permission_reason_INTERNET",
+      "value": "请求网络权限"
+    },
+    {
+      "name": "home",
+      "value": "主页"
+    },
+    {
+      "name": "rank",
+      "value": "排行"
+    },
+    {
+      "name": "favorite",
+      "value": "喜欢"
+    },
+    {
+      "name": "search",
+      "value": "搜索"
+    },
+    {
+      "name": "more",
+      "value": "更多"
+    },
+    {
+      "name": "recommend_not_tips",
+      "value": "没有更多推荐可加载了哦"
+    },
+    {
+      "name": "search_not_tips",
+      "value": "没有更多搜索结果了哦"
+    },
+    {
+      "name": "loading_failed",
+      "value": "加载失败，请重试"
+    },
+    {
+      "name": "loading_more",
+      "value": "加载更多数据中..."
+    },
+    {
+      "name": "collection",
+      "value": "收藏"
+    },
+    {
+      "name": "trend",
+      "value": "动态"
+    },
+    {
+      "name": "follow",
+      "value": "关注"
+    },
+    {
+      "name": "unfollow",
+      "value": "取消关注"
+    },
+    {
+      "name": "followed",
+      "value": "已关注"
+    },
+    {
+      "name": "all",
+      "value": "全部"
+    },
+    {
+      "name": "public",
+      "value": "公开"
+    },
+    {
+      "name": "private",
+      "value": "私密"
+    },
+    {
+      "name": "recommend_author",
+      "value": "推荐作者"
+    },
+    {
+      "name": "recommend_illust",
+      "value": "推荐插画"
+    },
+    {
+      "name": "search_placeholder_1",
+      "value": "搜索插画标题或画师昵称"
+    },
+    {
+      "name": "search_placeholder_2",
+      "value": "输入搜索词或 ID"
+    },
+    {
+      "name": "recommend_tag",
+      "value": "推荐标签"
+    },
+    {
+      "name": "illust",
+      "value": "插画"
+    },
+    {
+      "name": "manga",
+      "value": "漫画"
+    },
+    {
+      "name": "user_author",
+      "value": "画师"
+    },
+    {
+      "name": "user",
+      "value": "用户"
+    },
+    {
+      "name": "jump_user",
+      "value": "跳转到用户"
+    },
+    {
+      "name": "jump_illusst",
+      "value": "跳转到作品"
+    },
+    {
+      "name": "comment",
+      "value": "个人简介"
+    },
+    {
+      "name": "details",
+      "value": "详情"
+    },
+    {
+      "name": "created_date",
+      "value": "创建时间"
+    },
+    {
+      "name": "gender",
+      "value": "性别"
+    },
+    {
+      "name": "region",
+      "value": "地区"
+    },
+    {
+      "name": "birthday",
+      "value": "生日"
+    },
+    {
+      "name": "website",
+      "value": "网站"
+    },
+    {
+      "name": "pc_model",
+      "value": "PC 机型"
+    },
+    {
+      "name": "monitor",
+      "value": "显示器"
+    },
+    {
+      "name": "tool",
+      "value": "绘图软件"
+    },
+    {
+      "name": "tablet",
+      "value": "数位板"
+    },
+    {
+      "name": "unknown",
+      "value": "未知"
+    },
+    {
+      "name": "no_comment",
+      "value": "这个人很懒，什么都没写"
+    },
+    {
+      "name": "loading_info",
+      "value": "正在加载..."
+    },
+    {
+      "name": "works",
+      "value": "作品"
+    },
+    {
+      "name": "account_info",
+      "value": "账户信息"
+    },
+    {
+      "name": "history",
+      "value": "历史记录"
+    },
+    {
+      "name": "preference",
+      "value": "偏好设置"
+    },
+    {
+      "name": "download_manage",
+      "value": "下载管理"
+    },
+    {
+      "name": "keyword_manage",
+      "value": "关键词管理"
+    },
+    {
+      "name": "app_data",
+      "value": "应用数据"
+    },
+    {
+      "name": "about",
+      "value": "关于"
+    },
+    {
+      "name": "logout",
+      "value": "退出登录"
+    },
+    {
+      "name": "not_logged_in",
+      "value": "未登录"
+    },
+    {
+      "name": "tap_to_login",
+      "value": "点击登录"
+    },
+    {
+      "name": "login",
+      "value": "登录"
+    },
+    {
+      "name": "confirm_logout",
+      "value": "确定要退出登录吗？"
+    },
+    {
+      "name": "confirm_clear_search_history",
+      "value": "确定要清空搜索记录吗？"
+    },
+    {
+      "name": "feature_dev_tip",
+      "value": "功能开发中..."
+    },
+    {
+      "name": "cancel",
+      "value": "取消"
+    },
+    {
+      "name": "search_history",
+      "value": "搜索历史"
+    },
+    {
+      "name": "clear",
+      "value": "清空"
+    },
+    {
+      "name": "tips",
+      "value": "提示"
+    },
+    {
+      "name": "deleted",
+      "value": "已删除 %s"
+    },
+    {
+      "name": "follow_fail",
+      "value": "关注失败"
+    },
+    {
+      "name": "unfollow_fail",
+      "value": "取关失败"
+    },
+    {
+      "name": "follow_success",
+      "value": "已关注 %s"
+    },
+    {
+      "name": "unfollow_success",
+      "value": "已取关 %s"
+    },
+    {
+      "name": "download_now",
+      "value": "已开始下载： %s"
+    },
+    {
+      "name": "show",
+      "value": "显示"
+    },
+    {
+      "name": "hide",
+      "value": "隐藏"
+    },
+    {
+      "name": "completed",
+      "value": "已完成"
+    },
+    {
+      "name": "tasks",
+      "value": "所有任务"
+    },
+    {
+      "name": "downloading",
+      "value": "下载中"
+    },
+    {
+      "name": "fail",
+      "value": "失败"
+    },
+    {
+      "name": "save_success",
+      "value": "%s 保存成功"
+    },
+    {
+      "name": "in_line",
+      "value": "排队中..."
+    },
+    {
+      "name": "continue",
+      "value": "继续"
+    },
+    {
+      "name": "unknown_works",
+      "value": "未知作品"
+    },
+    {
+      "name": "unknown_artist",
+      "value": "未知画师"
+    },
+    {
+      "name": "pause_all_tasks",
+      "value": "暂停所有下载任务"
+    },
+    {
+      "name": "resume_all_tasks",
+      "value": "恢复所有下载任务"
+    },
+    {
+      "name": "restart_all_failed_tasks",
+      "value": "重试所有失败任务"
+    },
+    {
+      "name": "clear_all_completed_tasks",
+      "value": "清空所有已完成任务"
+    },
+    {
+      "name": "register",
+      "value": "注册"
+    },
+    {
+      "name": "token_login",
+      "value": "Token登录"
+    },
+    {
+      "name": "user_accounts",
+      "value": "账号切换"
+    },
+    {
+      "name": "register_account",
+      "value": "注册账号"
+    },
+    {
+      "name": "add_an_account",
+      "value": "添加已有账号"
+    },
+    {
+      "name": "account_added_successfully",
+      "value": "账号添加成功"
+    },
+    {
+      "name": "login_successfully",
+      "value": "登录成功"
+    },
+    {
+      "name": "account",
+      "value": "账号"
+    },
+    {
+      "name": "old_password",
+      "value": "旧密码"
+    },
+    {
+      "name": "new_password",
+      "value": "新密码"
+    },
+    {
+      "name": "mail_address",
+      "value": "邮箱"
+    },
+    {
+      "name": "export_token",
+      "value": "导出Token"
+    },
+    {
+      "name": "color_mode",
+      "value": "颜色模式"
+    },
+    {
+      "name": "light_mode",
+      "value": "浅色模式"
+    },
+    {
+      "name": "dark_mode",
+      "value": "深色模式"
+    },
+    {
+      "name": "follow_system",
+      "value": "跟随系统"
+    },
+    {
+      "name": "language",
+      "value": "语言"
+    },
+    {
+      "name": "zh_cn",
+      "value": "简体中文"
+    },
+    {
+      "name": "browse_and_show",
+      "value": "浏览与展示"
+    },
+    {
+      "name": "image_preview_quality",
+      "value": "列表预览质量"
+    },
+    {
+      "name": "image_detail_quality",
+      "value": "插画详情质量"
+    },
+    {
+      "name": "image_view_quality",
+      "value": "大图查看质量"
+    },
+    {
+      "name": "main_show",
+      "value": "首页展示"
+    },
+    {
+      "name": "display_ai_tag",
+      "value": "显示 AI 作品标记"
+    },
+    {
+      "name": "the_number_of_downloads",
+      "value": "同时下载数目"
+    },
+    {
+      "name": "share_format",
+      "value": "分享格式"
+    },
+    {
+      "name": "file_save_format",
+      "value": "保存格式"
+    },
+    {
+      "name": "follow_after_collecting",
+      "value": "收藏后关注画师"
+    },
+    {
+      "name": "private_collecting",
+      "value": "默认私密收藏"
+    },
+    {
+      "name": "download_after_collecting",
+      "value": "收藏后自动下载"
+    },
+    {
+      "name": "collecting_when_download",
+      "value": "下载时自动收藏"
+    },
+    {
+      "name": "general_settings",
+      "value": "通用设置"
+    },
+    {
+      "name": "personal_preference",
+      "value": "个人偏好"
+    },
+    {
+      "name": "medium",
+      "value": "中等 (省流)"
+    },
+    {
+      "name": "large",
+      "value": "大图 (清晰)"
+    },
+    {
+      "name": "original",
+      "value": "原图 (耗流)"
+    },
+    {
+      "name": "share_info_format",
+      "value": "分享信息格式"
+    },
+    {
+      "name": "file_name_format",
+      "value": "文件名格式"
+    },
+    {
+      "name": "save_format_placeholder",
+      "value": "请输入保存格式"
+    },
+    {
+      "name": "share_text_format",
+      "value": "分享文本格式"
+    },
+    {
+      "name": "share_format_placeholder",
+      "value": "请输入分享格式"
+    },
+    {
+      "name": "preview_effect",
+      "value": "预览效果"
+    },
+    {
+      "name": "available_variables",
+      "value": "可用变量 (点击插入)"
+    },
+    {
+      "name": "placeholder",
+      "value": "占位符"
+    },
+    {
+      "name": "placeholder_template",
+      "value": "占位符 / 模板"
+    },
+    {
+      "name": "description",
+      "value": "说明"
+    },
+    {
+      "name": "example",
+      "value": "示例"
+    },
+    {
+      "name": "action",
+      "value": "操作"
+    },
+    {
+      "name": "illust_id_desc",
+      "value": "作品ID"
+    },
+    {
+      "name": "part_desc",
+      "value": "多图序号"
+    },
+    {
+      "name": "title_desc",
+      "value": "作品标题"
+    },
+    {
+      "name": "title_example",
+      "value": "阳光沙滩"
+    },
+    {
+      "name": "user_name_desc",
+      "value": "画师名称"
+    },
+    {
+      "name": "user_name_example",
+      "value": "小可爱"
+    },
+    {
+      "name": "uid_desc",
+      "value": "画师UID"
+    },
+    {
+      "name": "underline_desc",
+      "value": "下划线"
+    },
+    {
+      "name": "part_type_desc",
+      "value": "图号类型"
+    },
+    {
+      "name": "tags_desc",
+      "value": "作品标签"
+    },
+    {
+      "name": "tags_example",
+      "value": "插画, 风景"
+    },
+    {
+      "name": "illust_link_desc",
+      "value": "作品链接"
+    },
+    {
+      "name": "user_link_desc",
+      "value": "画师主页"
+    },
+    {
+      "name": "click_to_insert",
+      "value": "点击插入"
+    },
+    {
+      "name": "insert_template",
+      "value": "插入模板"
+    },
+    {
+      "name": "insert",
+      "value": "插入"
+    },
+    {
+      "name": "success_save",
+      "value": "保存成功"
+    },
+    {
+      "name": "browse_history",
+      "value": "浏览历史"
+    },
+    {
+      "name": "function",
+      "value": "功能"
+    },
+    {
+      "name": "bookmarked",
+      "value": "已收藏 %s"
+    },
+    {
+      "name": "not_bookmarked",
+      "value": "%s 已取消收藏"
+    },
+    {
+      "name": "permission_reason_DETECT_GESTURE",
+      "value": "给悬浮物添加适人握持"
+    },
+    {
+      "name": "basic_info",
+      "value": "基本信息"
+    },
+    {
+      "name": "app_version",
+      "value": "应用版本"
+    },
+    {
+      "name": "project_intro",
+      "value": "项目简介"
+    },
+    {
+      "name": "project",
+      "value": "项目"
+    },
+    {
+      "name": "author_home",
+      "value": "作者主页"
+    },
+    {
+      "name": "project_repo",
+      "value": "项目仓库"
+    },
+    {
+      "name": "contributors",
+      "value": "贡献者（排名不分先后）"
+    },
+    {
+      "name": "thanks",
+      "value": "致谢"
+    },
+    {
+      "name": "legal",
+      "value": "法律声明"
+    },
+    {
+      "name": "open_source_license",
+      "value": "开源协议"
+    },
+    {
+      "name": "disclaimer",
+      "value": "免责声明"
+    },
+    {
+      "name": "project_maintenance",
+      "value": "项目维护"
+    },
+    {
+      "name": "icon_drawing",
+      "value": "图标及标识符绘制"
+    },
+    {
+      "name": "check_update",
+      "value": "检查更新"
+    },
+    {
+      "name": "related_recommendations",
+      "value": "相关推荐"
+    },
+    {
+      "name": "no_further_recommendations",
+      "value": "没有更多推荐了"
+    },
+    {
+      "name": "load_more_recommendations",
+      "value": "加载更多推荐"
+    },
+    {
+      "name": "loading_recommendations",
+      "value": "正在加载推荐"
+    },
+    {
+      "name": "swiper_browsing",
+      "value": "横向切换浏览"
+    },
+    {
+      "name": "browse",
+      "value": "%d 浏览"
+    },
+    {
+      "name": "num_collection",
+      "value": "%d 收藏"
+    },
+    {
+      "name": "custom_rank_items",
+      "value": "自定义排行榜项目"
+    },
+    {
+      "name": "custom_rank_items_tips",
+      "value": "点击切换选中状态，长按拖拽调整顺序"
+    },
+    {
+      "name": "click_config",
+      "value": "点击配置"
+    },
+    {
+      "name": "no_custom_rank",
+      "value": "尚未配置排行榜项目"
+    },
+    {
+      "name": "no_data",
+      "value": "暂无内容"
+    },
+    {
+      "name": "export",
+      "value": "导出"
+    },
+    {
+      "name": "import",
+      "value": "导入"
+    },
+    {
+      "name": "search_records",
+      "value": "搜索记录"
+    },
+    {
+      "name": "download_records",
+      "value": "下载记录"
+    },
+    {
+      "name": "storage_management",
+      "value": "存储管理"
+    },
+    {
+      "name": "clear_image_cache",
+      "value": "清理图片缓存"
+    },
+    {
+      "name": "import_confirm",
+      "value": "导入确认"
+    },
+    {
+      "name": "import_override_prefix",
+      "value": "导入将会覆盖当前的"
+    },
+    {
+      "name": "import_override_suffix",
+      "value": "，是否继续？"
+    },
+    {
+      "name": "browse_records",
+      "value": "浏览记录"
+    },
+    {
+      "name": "clear_download_cache",
+      "value": "清理下载缓存"
+    },
+    {
+      "name": "confirm_clear_download_cache",
+      "value": "确定要清空下载缓存吗？"
+    },
+    {
+      "name": "confirm_clear_image_cache",
+      "value": "确定要清空图片缓存吗？"
+    },
+    {
+      "name": "load_more",
+      "value": "加载更多"
+    },
+    {
+      "name": "already_over",
+      "value": "已经到底啦"
+    },
+    {
+      "name": "no_comments",
+      "value": "暂无评论，快来抢沙发"
+    },
+    {
+      "name": "comment_area",
+      "value": "评论区"
+    },
+    {
+      "name": "reply",
+      "value": "回复"
+    },
+    {
+      "name": "replying",
+      "value": "回复 @%s"
+    },
+    {
+      "name": "say_something",
+      "value": "说点什么..."
+    },
+    {
+      "name": "click_load_more",
+      "value": "点击加载更多"
+    },
+    {
+      "name": "click_load_more_reply",
+      "value": "点击加载更多回复"
+    },
+    {
+      "name": "view_reply",
+      "value": "查看回复"
+    },
+    {
+      "name": "novel",
+      "value": "小说"
+    },
+    {
+      "name": "data",
+      "value": "数据"
+    },
+    {
+      "name": "message",
+      "value": "信息"
+    },
+    {
+      "name": "exit",
+      "value": "退出"
+    },
+    {
+      "name": "enter",
+      "value": "进入"
+    },
+    {
+      "name": "novel_mode",
+      "value": "小说模式"
+    },
+    {
+      "name": "series",
+      "value": "系列"
+    },
+    {
+      "name": "recommend_novel",
+      "value": "推荐小说"
+    },
+    {
+      "name": "search_novel_placeholder",
+      "value": "搜索标题、作者或标签"
+    },
+    {
+      "name": "search_illust_placeholder",
+      "value": "搜索标题或PID"
+    },
+    {
+      "name": "select_all",
+      "value": "全选"
+    },
+    {
+      "name": "selected_num",
+      "value": "已选择 %d 项"
+    },
+    {
+      "name": "delete",
+      "value": "删除"
+    },
+    {
+      "name": "num_words",
+      "value": "%d字"
+    },
+    {
+      "name": "clear_browse_history",
+      "value": "清空浏览记录"
+    },
+    {
+      "name": "illust_mode",
+      "value": "插画模式"
+    },
+    {
+      "name": "start_reading",
+      "value": "开始阅读"
+    },
+    {
+      "name": "content_loading",
+      "value": "正文加载中"
+    },
+    {
+      "name": "check_out_comments",
+      "value": "查看评论"
+    },
+    {
+      "name": "content_loading_failed",
+      "value": "正文加载失败"
+    },
+    {
+      "name": "retry",
+      "value": "重试"
+    },
+    {
+      "name": "reading_srttings",
+      "value": "阅读设置"
+    },
+    {
+      "name": "novel_detail",
+      "value": "小说详情"
+    },
+    {
+      "name": "ai_assisted",
+      "value": "AI辅助"
+    },
+    {
+      "name": "ai_generated",
+      "value": "AI生成"
+    },
+    {
+      "name": "no_caption",
+      "value": "暂无简介"
+    },
+    {
+      "name": "series_works",
+      "value": "系列作品"
+    },
+    {
+      "name": "prev_page",
+      "value": "上一篇"
+    },
+    {
+      "name": "next_page",
+      "value": "下一篇"
+    },
+    {
+      "name": "tripartite_services",
+      "value": "三方服务"
+    },
+    {
+      "name": "view_repo",
+      "value": "查看仓库"
+    },
+    {
+      "name": "search_filter",
+      "value": "筛选"
+    },
+    {
+      "name": "filter_reset",
+      "value": "重置"
+    },
+    {
+      "name": "filter_confirm",
+      "value": "确定"
+    },
+    {
+      "name": "filter_sort",
+      "value": "排序方式"
+    },
+    {
+      "name": "sort_popular",
+      "value": "人气优先"
+    },
+    {
+      "name": "sort_newest",
+      "value": "最新"
+    },
+    {
+      "name": "sort_oldest",
+      "value": "最早"
+    },
+    {
+      "name": "filter_match_mode",
+      "value": "匹配方式"
+    },
+    {
+      "name": "match_partial",
+      "value": "部分匹配标签"
+    },
+    {
+      "name": "match_exact",
+      "value": "完全匹配标签"
+    },
+    {
+      "name": "match_title",
+      "value": "标题和简介"
+    },
+    {
+      "name": "filter_bookmark",
+      "value": "收藏数"
+    },
+    {
+      "name": "bookmark_unlimited",
+      "value": "不限"
+    },
+    {
+      "name": "filter_r18",
+      "value": "年龄限制"
+    },
+    {
+      "name": "r18_none",
+      "value": "不限制"
+    },
+    {
+      "name": "r18_only",
+      "value": "仅R-18"
+    },
+    {
+      "name": "r18_exclude",
+      "value": "排除R-18"
+    }
+  ]
+}
