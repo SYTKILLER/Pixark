@@ -1,5 +1,14 @@
 name: HarmonyOS App Build
 
+# ========== 工具链配置 ==========
+# 命令行工具版本必须 >= 工程 compatibleSdkVersion（当前 build-profile.json5 为 6.1.1(24)）。
+# 6.1.1 版本没有公开镜像，需从华为官方下载中心获取 Linux 版后上传到本仓库的 GitHub Release，
+# 然后替换下方 CLT_URL。上传注意：GitHub Release 单文件上限 2GiB，超出需分卷并调整下载/合并步骤。
+# 官方下载地址：https://developer.huawei.com/consumer/cn/download/ -> Command Line Tools (Linux)
+env:
+  CLT_VERSION: 6.1.0.816 # TODO: 替换为 6.1.1.x，否则无法编译 compatibleSdkVersion 6.1.1(24)
+  CLT_URL: https://github.com/Okysu/harmony-auto-build/releases/download/commandline-tools-linux-x64-6.1.0.816/commandline-tools-linux-x64-6.1.0.816.zip # TODO: 替换为自托管的 6.1.1 工具链地址
+
 # ========== 触发条件：推 tag 或手动触发 ==========
 on:
   push:
@@ -33,14 +42,14 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ./command-line-tools
-          key: ${{ runner.os }}-harmony-tools-6.1.0.816
+          key: ${{ runner.os }}-harmony-tools-${{ env.CLT_VERSION }}
 
       # 4. 下载工具链（如果缓存未命中）
       - name: Download Command Line Tools
         if: steps.cache-tools.outputs.cache-hit != 'true'
         run: |
           echo "Cache miss, downloading tools..."
-          curl -L -o tools.zip https://github.com/Okysu/harmony-auto-build/releases/download/commandline-tools-linux-x64-6.1.0.816/commandline-tools-linux-x64-6.1.0.816.zip
+          curl -L -o tools.zip "$CLT_URL"
           unzip tools.zip
           rm tools.zip
 
