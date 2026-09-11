@@ -60,7 +60,7 @@ Pixark 旨在为鸿蒙用户提供原生流畅的插画、小说浏览体验。�
 
 前往 [GitHub Releases](https://github.com/SYTKILLER/Pixark/releases/latest) 下载最新版本的 HAP 安装包。
 
-推送 `v*` 格式的 tag（如 `v1.0.2`）后，GitHub Actions 会自动构建并发布 Release。
+各版本更新内容见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 🧑‍💻 本地构建
 
