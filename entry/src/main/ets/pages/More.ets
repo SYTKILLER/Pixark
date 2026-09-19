@@ -182,14 +182,14 @@ export struct More {
       .layoutWeight(1)
       .scrollBar(BarState.Off)
       .backgroundColor(Color.Transparent)
+      // 内容穿过悬浮页签栏下方滚动，仅末尾避让（勿改成外层容器 padding，会截短滚动视口留白带）
+      .contentEndOffset(Math.max(16, PixState.FloatTabBarAvoid))
     }
     .width('100%')
     .backgroundColor($r('sys.color.background_primary'))
-    // 底部避让悬浮页签栏，保证"退出登录"等列表末尾内容不被遮挡
     .padding({
       left: PixState.PageMarginValue,
-      right: PixState.PageMarginValue,
-      bottom: Math.max(40, PixState.FloatTabBarAvoid)
+      right: PixState.PageMarginValue
     })
     .onAppear(() => {
       if (PixState.widthBp >= 2) {

@@ -65,6 +65,17 @@ export default class EntryAbility extends UIAbility {
         logger.error(`WindowStage`, `Failed to load the content., ${err}`)
         return;
       }
+      // 沉浸式必须在 loadContent 完成回调里立刻设置：更早调用会静默失败（getWindowAvoidArea 报 1300002），
+      // 窗口停留在安全区布局时 HdsTabs 悬浮栏会绘制不透明白色表面遮挡内容
+      try {
+        windowStage.getMainWindowSync().setWindowLayoutFullScreen(true).then(() => {
+          logger.info('WindowRect', 'Succeeded in setting the window layout to full-screen mode.');
+        }).catch((err: BusinessError) => {
+          logger.error(`WindowRect`, `Failed to set the window layout to full-screen mode., ${err}`)
+        });
+      } catch (error) {
+        logger.error(`WindowRect`, `Failed to getMainWindowSync for full-screen layout., ${error}`)
+      }
       try {
         const data = await windowStage.getMainWindow()
         // 初始化UI上下文
@@ -333,13 +344,6 @@ export default class EntryAbility extends UIAbility {
     // 获取应用主窗口
     try {
       const windowClass: window.Window = windowStage.getMainWindowSync();
-
-      // 设置窗口全屏
-      windowClass.setWindowLayoutFullScreen(true).then(() => {
-        logger.info('WindowRect', 'Succeeded in setting the window layout to full-screen mode.');
-      }).catch((err: BusinessError) => {
-        logger.error(`WindowRect`, `Failed to set the window layout to full-screen mode., ${err}`)
-      });
 
       // 获取布局避让遮挡的区域
       this.avoidManager = new AvoidanceManager(windowClass, UIContext);

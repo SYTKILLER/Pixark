@@ -1,3 +1,4 @@
+import { SearchingPageParams } from "../viewmodel/SearchViewModel";
 import { PixivImageComponent } from "../components/PixivImage";
 import { PixState } from "../entryability/AppState";
 import { PixivTrendingTag } from "../services/PixivTypes";
@@ -122,15 +123,15 @@ export struct SearchContent {
                                   toastUtil.showToast({ message: $r('app.string.deleted', item.keyword)})
                                 }
                               } else {
-                                // 设置搜索关键词（搜索由搜索结果页 onReady 时发起）
-                                searchVM.keyword = item.keyword;
-                                // 根据当前模式决定搜索类型
-                                searchVM.searchType = appSettings.novel_mode ? 'novel' : 'illust';
+                                // 根据当前模式决定搜索类型，关键词经路由参数传入，由搜索结果页 onReady 时发起搜索
+                                const kw = item.keyword;
+                                const st = appSettings.novel_mode ? 'novel' : 'illust';
                                 // 使用动画跳转到搜索结果页面
                                 toastUtil.animateTo({
                                   curve: curves.interpolatingSpring(0, 1, 342, 38)
                                 }, () => {
-                                  this.pageInfos.pushPath({ name: 'searching_page' }, false);
+                                  const p: SearchingPageParams = { keyword: kw, searchType: st };
+                                  this.pageInfos.pushPathByName('searching_page', p, false);
                                 })
                               }
                             }
@@ -187,15 +188,16 @@ export struct SearchContent {
                         TapGesture({ count: 1 })
                           .onAction((event: GestureEvent) => {
                             if (event) {
-                              // 设置搜索关键词为标签名（优先使用翻译名），搜索由搜索结果页 onReady 时发起
-                              searchVM.keyword = item.translated_name || item.tag;
+                              // 搜索关键词为标签名（优先使用翻译名），经路由参数传入，由搜索结果页 onReady 时发起搜索
+                              const kw = item.translated_name || item.tag;
                               // 点击标签时，切到当前模式对应的搜索类型
-                              searchVM.searchType = appSettings.novel_mode ? 'novel' : 'illust';
+                              const st = appSettings.novel_mode ? 'novel' : 'illust';
                               // 使用动画跳转到搜索结果页面
                               toastUtil.animateTo({
                                 curve: curves.interpolatingSpring(0, 1, 342, 38)
                               }, () => {
-                                this.pageInfos.pushPath({ name: 'searching_page' }, false);
+                                const p: SearchingPageParams = { keyword: kw, searchType: st };
+                                this.pageInfos.pushPathByName('searching_page', p, false);
                               })
                             }
                           }))

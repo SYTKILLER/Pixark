@@ -172,6 +172,8 @@ export type UserPreview = {
   illusts: PixivIllust[];
   novels: PixivNovel[];
   is_muted?: boolean;
+  /** UI 侧标注：该条目来源于公开/私密关注列表（非 API 字段），供列表项显示关注方式 */
+  restrict?: 'public' | 'private';
 };
 
 /** 用户个人资料 */

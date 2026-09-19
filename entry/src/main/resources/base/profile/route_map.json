@@ -101,6 +101,11 @@
       "buildFunction": "NovelDetailBuilder"
     },
     {
+      "name": "novel_series",
+      "pageSourceFile": "src/main/ets/view/NovelSeriesPage.ets",
+      "buildFunction": "NovelSeriesBuilder"
+    },
+    {
       "name": "collection",
       "pageSourceFile": "src/main/ets/view/more/CollectionPage.ets",
       "buildFunction": "CollectionPageBuilder"

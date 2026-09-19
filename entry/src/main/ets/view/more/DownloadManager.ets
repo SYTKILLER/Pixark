@@ -4,7 +4,7 @@ import { DownloadsViewModel, downloaderVM } from "../../viewmodel/DownloadsViewM
 import { SegmentButtonV2Items, SymbolGlyphModifier, TabSegmentButtonV2 } from "@kit.ArkUI";
 import { request } from "@kit.BasicServicesKit";
 import DownloadRecordInfo from "../../common/entity/DownloadRecordInfo";
-import { DetailPageParams } from "../../common/entity/DetailEntity";
+import { DetailPageParams, NovelDetailParams } from "../../common/entity/DetailEntity";
 import { toastUtil } from "../../common/utils/ToastUtils";
 import { NaviContainer } from "../../components/NaviContainer";
 import { PixivImageComponent } from "../../components/PixivImage";
@@ -124,8 +124,12 @@ struct DownloadManager {
                         }
                         .backgroundColor(Color.Transparent)
                         .onClick(() => {
-                          // 点击触发手动保存
-                          this.dVM.manualSaveToGallery(item);
+                          // 小说走系统下载目录导出，插画走相册授权保存
+                          if (item.recordType === 'novel') {
+                            this.dVM.saveNovelToDevice(item);
+                          } else {
+                            this.dVM.manualSaveToGallery(item);
+                          }
                         })
                       }
                       // 完成标志
@@ -197,8 +201,14 @@ struct DownloadManager {
         }
         .onClick(() => {
           if (!this.dVM.isEditMode) {
-            // 打开插画详情
-            this.openIllust(item.illust_id);
+            if (item.recordType === 'novel') {
+              // 小说记录跳转小说详情页
+              const params: NovelDetailParams = { id: item.illust_id };
+              this.pageStack.pushPathByName('novel_detail', params, true);
+            } else {
+              // 打开插画详情
+              this.openIllust(item.illust_id);
+            }
           } else {
             this.dVM.toggleSelect(item.task_id);
           }

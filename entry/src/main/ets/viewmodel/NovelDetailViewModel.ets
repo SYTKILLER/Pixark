@@ -4,9 +4,9 @@ import { PixivNovel, PrevNovel, SeriesNavigation } from '../services/PixivTypes'
 import { historyVM } from './HistoryViewModel';
 import { UISettings } from '../common/entity/SettingsModel';
 import { ReadingMode, getThemeConfig } from '../common/entity/NovelModel';
-import { fileIo as fs } from '@kit.CoreFileKit';
 import { _PixState } from '../entryability/AppState';
 import { toastUtil } from '../common/utils/ToastUtils';
+import { downloaderVM } from './DownloadsViewModel';
 
 const logger = createLogger('NovelDetailVM');
 
@@ -247,7 +247,7 @@ export class NovelDetailViewModel {
     }
   }
 
-  /** 将小说正文保存为 txt 文件 */
+  /** 将小说正文保存为 txt：登记到下载列表后，经系统下载目录导出为公共文件 */
   async downloadNovel() {
     if (this.isDownloading) return;
     this.isDownloading = true;
@@ -256,24 +256,11 @@ export class NovelDetailViewModel {
         await this.fetchNovelContent();
       }
       const text = this.novelText;
-      if (!text) {
+      if (!text || !this.novelInfo) {
         toastUtil.showToast({ message: '正文加载失败，无法保存' });
         return;
       }
-      const dir = `${_PixState.Context.filesDir}/Pixiv/Novels`;
-      if (!fs.accessSync(dir)) {
-        fs.mkdirSync(dir, true);
-      }
-      const safeTitle = (this.novelInfo?.title || `novel_${this.novelId}`)
-        .replace(/[\\/:*?"<>|.]+/g, '_')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .replace(/^_|_$/g, '') || `novel_${this.novelId}`;
-      const filePath = `${dir}/${safeTitle}_${this.novelId}.txt`;
-      const file = fs.openSync(filePath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
-      fs.writeSync(file.fd, text);
-      fs.closeSync(file);
-      toastUtil.showToast({ message: `已保存 ${safeTitle}_${this.novelId}.txt` });
+      await downloaderVM.addNovelTask(_PixState.Context, this.novelInfo, text);
     } catch (e) {
       logger.error('downloadNovel error:', e);
       toastUtil.showToast({ message: '保存失败' });

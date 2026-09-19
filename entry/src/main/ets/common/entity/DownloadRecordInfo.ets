@@ -48,6 +48,12 @@ export default class DownloadRecordInfo {
   thumbnail: string = '';
 
   /**
+   * 记录类型: illust=插画图片, novel=小说TXT
+   */
+  @Column({ name: 'record_type', type: 'TEXT', notNull: true, defaultValue: 'illust' })
+  recordType: string = 'illust';
+
+  /**
    * 本地文件保存路径
    */
   @Column({ name: 'file_path', type: 'TEXT' })

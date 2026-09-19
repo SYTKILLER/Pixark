@@ -135,6 +135,19 @@ export class RankViewModel implements IIllustSwiperProvider {
     this.fetchRanking(this.currentMode);
   }
 
+  /**
+   * 最新可用榜单日期：Pixiv 按 JST 每天上午 ~11:00 发布前一天榜单，
+   * 未发布日期（如今天、刚过去的昨天凌晨）服务端只返回空列表。
+   * 用 now(JST) - 35h 估算：11:00 前可选到前天，11:00 后可选到昨天。
+   */
+  latestAvailableDate(): Date {
+    const jstOffsetMs = 9 * 3600 * 1000;
+    const publishLagMs = 35 * 3600 * 1000;
+    const jst = new Date(Date.now() + jstOffsetMs - publishLagMs);
+    // 经 UTC 通道取 Y-M-D，得到的就是 JST 日历日期
+    return new Date(Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate()));
+  }
+
   clearDate() {
     if (!this.currentDate) return;
     this.currentDate = '';
@@ -171,14 +184,23 @@ export class RankViewModel implements IIllustSwiperProvider {
         const res = await pixiv.getNovelRanking(targetMode, dateParam);
         data.novels = res.novels || [];
         data.nextNovelUrl = res.next_url || '';
+        logger.debug(`[fetchRanking] 小说返回 ${data.novels.length} 条, next=${!!data.nextNovelUrl}`);
+        if (dateParam && data.novels.length === 0) {
+          toastUtil.showToast({ message: '该日期榜单尚未发布或不存在' });
+        }
       } else {
         const res = await pixiv.getRanking(targetMode, dateParam);
         data.illusts = res.illusts || [];
         data.nextUrl = res.next_url || '';
+        logger.debug(`[fetchRanking] 插画返回 ${data.illusts.length} 条, next=${!!data.nextUrl}`);
+        if (dateParam && data.illusts.length === 0) {
+          toastUtil.showToast({ message: '该日期榜单尚未发布或不存在' });
+        }
       }
       data.loaded = true;
     } catch (e) {
-      logger.error(`[fetchRanking] 请求失败: ${JSON.stringify(e)}`);
+      const err = e as Error;
+      logger.error(`[fetchRanking] 请求失败: ${err?.message ?? JSON.stringify(e)}`);
       toastUtil.showToast({ message: '加载排行榜失败' });
     } finally {
       data.isLoading = false;

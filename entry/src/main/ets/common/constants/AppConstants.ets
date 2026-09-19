@@ -16,4 +16,9 @@ export class AppConstants {
 
   static readonly GITHUB_REPO_URL = 'https://github.com/SYTKILLER/Pixark'
 
+  // GitHub Releases 最新版接口（检查更新用）
+  static readonly GITHUB_RELEASES_API_URL = 'https://api.github.com/repos/SYTKILLER/Pixark/releases/latest'
+  // GitHub Releases 页面（前往更新时兜底跳转用）
+  static readonly GITHUB_RELEASES_URL = 'https://github.com/SYTKILLER/Pixark/releases'
+
 }

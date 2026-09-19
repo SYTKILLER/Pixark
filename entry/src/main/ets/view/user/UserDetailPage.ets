@@ -1,6 +1,6 @@
 import { PixivImageComponent } from "../../components/PixivImage";
 import { PixState } from "../../entryability/AppState";
-import { SegmentButtonV2Items, TabSegmentButtonV2 } from '@kit.ArkUI';
+import { SegmentButtonV2Items, TabSegmentButtonV2, SymbolGlyphModifier } from '@kit.ArkUI';
 import { UserDetailViewModel } from "../../viewmodel/UserDetailViewModel";
 import { UserDetailParams } from "../../common/entity/UserDetailEntity";
 import { DetailPageParams } from "../../common/entity/DetailEntity"; // 用于跳转插画
@@ -21,6 +21,8 @@ struct UserDetail {
   @Local scroller: Scroller = new Scroller();
   // 内容是否已滚动（驱动标题栏毛玻璃渐入）
   @Local contentScrolled: boolean = false;
+  // 关注按钮长按菜单
+  @Local showFollowMenu: boolean = false;
   @Local uDV: UserDetailViewModel =  new UserDetailViewModel()
 
   private tabItems: SegmentButtonV2Items = new SegmentButtonV2Items([
@@ -113,6 +115,69 @@ struct UserDetail {
     })
   }
 
+  /** 关注长按菜单：按当前关注状态给出可切换项 */
+  @Builder
+  FollowMenu() {
+    Menu() {
+      if (!this.uDV.isFollow) {
+        // 未关注：私密关注 / 公开关注
+        MenuItem({
+          content: $r('app.string.follow_private'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.eye_slash')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            // 选中即收起：必须先关菜单再改数据，否则数据刷新引发菜单收起-展开-收起的闪烁
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('follow_private');
+          })
+        MenuItem({
+          content: $r('app.string.follow_public'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.eye')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('follow_public');
+          })
+      } else if (!this.uDV.isFollowPrivate) {
+        // 已关注（公开）：取消关注 / 私密关注
+        MenuItem({
+          content: $r('app.string.unfollow'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.xmark')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('unfollow');
+          })
+        MenuItem({
+          content: $r('app.string.follow_private'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.eye_slash')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('follow_private');
+          })
+      } else {
+        // 私密关注：公开关注 / 取消关注
+        MenuItem({
+          content: $r('app.string.follow_public'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.eye')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('follow_public');
+          })
+        MenuItem({
+          content: $r('app.string.unfollow'),
+          symbolStartIcon: new SymbolGlyphModifier($r('sys.symbol.xmark')).fontColor([$r('sys.color.font_secondary')])
+        })
+          .onClick(() => {
+            this.showFollowMenu = false;
+            this.uDV.setFollowState('unfollow');
+          })
+      }
+    }
+  }
+
   @Builder
   UserHeader() {
     Column() {
@@ -168,8 +233,8 @@ struct UserDetail {
           .maxLines(3)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .margin({ top: 4 })
-        // 关注按钮
-        Button(this.uDV.isFollow ? $r('app.string.unfollow') : $r('app.string.follow'))
+        // 关注按钮（三态：关注 / 已关注 / 私密关注；点击默认公开关注或取消，长按弹出切换菜单）
+        Button(this.uDV.isFollow ? (this.uDV.isFollowPrivate ? $r('app.string.follow_private') : $r('app.string.followed')) : $r('app.string.follow'))
           .backgroundColor(this.uDV.isFollow ? $r('sys.color.comp_background_tertiary') : $r('app.color.brand'))
           .fontColor(this.uDV.isFollow ? $r('sys.color.font_primary') : Color.White)
           .padding({ left: 24, right: 24 })
@@ -178,7 +243,20 @@ struct UserDetail {
           .height(36)
           .borderRadius(18)
           .onClick(() => {
-            this.uDV.followOrCancel()
+            this.uDV.setFollowState(this.uDV.isFollow ? 'unfollow' : 'follow_public')
+          })
+          .gesture(
+            LongPressGesture({ repeat: false, duration: 400 })
+              .onAction(() => {
+                this.showFollowMenu = true
+              })
+          )
+          .bindMenu(this.showFollowMenu, this.FollowMenu(), {
+            placement: Placement.Bottom,
+            backgroundBlurStyle: BlurStyle.Thin,
+            onDisappear: () => {
+              this.showFollowMenu = false
+            }
           })
         // 统计数据
         Row() {

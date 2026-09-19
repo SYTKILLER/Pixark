@@ -22,6 +22,20 @@ struct UserSettings {
   // 内容区是否已滚动（驱动标题栏毛玻璃渐入）
   @Local contentScrolled: boolean = false
 
+  // 落地页选项：小说模式下主页面签无排行榜，对应选项随之隐藏（索引值保持固定五页布局语义）
+  private mainShowMenuOptions(): MenuOption[] {
+    const options: MenuOption[] = [new MenuOption('0', $r('app.string.home'), $r('sys.symbol.house'))]
+    if (!appSettings.novel_mode) {
+      options.push(new MenuOption('1', $r('app.string.rank'), $r('sys.symbol.ranking_badge_bolt')))
+    }
+    options.push(
+      new MenuOption('2', $r('app.string.trend'), $r('sys.symbol.picture_fill')),
+      new MenuOption('3', $r('app.string.search'), $r('sys.symbol.curve_magnifyingglass')),
+      new MenuOption('4', $r('app.string.more'), $r('sys.symbol.square_grid_2x2'))
+    )
+    return options
+  }
+
   private get itemList(): CustomItemInfo[] {
     return [
       // 通用设置
@@ -107,13 +121,7 @@ struct UserSettings {
         type: ItemActionType.MENU,
         id: 'main_show',
         value: UISettings.main_show,
-        menuOptions: [
-          new MenuOption('0', $r('app.string.home'), $r('sys.symbol.house')),
-          new MenuOption('1', $r('app.string.rank'), $r('sys.symbol.ranking_badge_bolt')),
-          new MenuOption('2', $r('app.string.trend'), $r('sys.symbol.picture_fill')),
-          new MenuOption('3', $r('app.string.search'), $r('sys.symbol.curve_magnifyingglass')),
-          new MenuOption('4', $r('app.string.more'), $r('sys.symbol.square_grid_2x2'))
-        ],
+        menuOptions: this.mainShowMenuOptions(),
         onChange: (value) => {
           UISettings.main_show = value as string
         }

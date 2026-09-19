@@ -11,9 +11,15 @@ import { appSettings } from '../common/entity/SettingsModel';
 
 const logger = createLogger('SearchViewModel')
 
+/** 搜索页路由参数：关键词按次传入，保证多级搜索页各自持有独立状态 */
+export class SearchingPageParams {
+  keyword: string = '';
+  searchType: 'illust' | 'novel' | 'user' = 'illust';
+}
+
 
 @ObservedV2
-class SearchViewModel implements IIllustSwiperProvider {
+export class SearchViewModel implements IIllustSwiperProvider {
 
   // 搜索历史
   @Trace searchHistory: SearchHistoryInfo[] = []

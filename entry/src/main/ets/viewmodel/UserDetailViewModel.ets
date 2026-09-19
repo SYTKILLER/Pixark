@@ -16,6 +16,10 @@ export class UserDetailViewModel implements IIllustSwiperProvider {
   // 完整的用户详情
   @Trace userData: UserDetailResponse | null = null;
   @Trace isFollow: boolean = false;
+  // 关注方式（仅 isFollow 为 true 时有意义）：由 follow-detail 接口校正
+  @Trace isFollowPrivate: boolean = false;
+  // 用户在本页面手动操作过关注后置位，跳过 follow-detail 异步校正，防止状态回跳
+  private followLocalDirty: boolean = false;
   @Trace isDetailLoading: boolean = false;
   // 统一的加载更多防抖状态
   @Trace isLoadingMore: boolean = false;
@@ -88,6 +92,8 @@ export class UserDetailViewModel implements IIllustSwiperProvider {
     this.hasLoadedMangas = false;
     this.hasLoadedNovels = false;
     this.tabIndex = 0;               // 默认回到第一个 Tab (插画)
+    this.isFollowPrivate = false;    // 重置关注方式（预加载数据无此信息，等待详情接口校正）
+    this.followLocalDirty = false;
     // 页面初始化
     logger.debug(`[onReady] Start. UserId: ${userId}, HasPreUserData:${!!params.user}`);
     // 初始化预加载数据
@@ -125,11 +131,27 @@ export class UserDetailViewModel implements IIllustSwiperProvider {
       );
       // 清理预加载数据
       this.preUserData = null;
+      // follow-detail 校正关注方式（公开/私密）：失败静默，保持 is_followed 兜底
+      this.syncFollowDetail(userId);
     } catch (e) {
       logger.error(`[loadUserDetail] Failed name: ${e.name}, message: ${e.message}`);
       toastUtil.showToast({ message: `加载用户信息失败, ${e.message}` });
     } finally {
       this.isDetailLoading = false;
+    }
+  }
+
+  /** 查询目标用户的关注详情，精确校正 isFollow 与公开/私密状态 */
+  private async syncFollowDetail(userId: number) {
+    try {
+      const detail = await pixiv.getUserFollowDetail(userId);
+      if (this.followLocalDirty) return; // 用户已手动操作，以本地为准
+      this.isFollow = detail.is_followed;
+      this.isFollowPrivate = detail.is_followed && detail.restrict === 'private';
+      if (this.userData?.user) this.userData.user.is_followed = detail.is_followed;
+      logger.debug(`[syncFollowDetail] UserId: ${userId}, IsFollowed: ${detail.is_followed}, Restrict: ${detail.restrict}`);
+    } catch (e) {
+      logger.warn(`[syncFollowDetail] Failed: ${JSON.stringify(e)}`);
     }
   }
 
@@ -244,26 +266,29 @@ export class UserDetailViewModel implements IIllustSwiperProvider {
     }
   }
 
-  async followOrCancel() {
+  /** 关注动作：'follow_public' 公开关注 | 'follow_private' 私密关注 | 'unfollow' 取消关注 */
+  async setFollowState(action: 'follow_public' | 'follow_private' | 'unfollow') {
     if (!this.userData) return;
     const userId = this.userData.user.id;
-    const action = this.isFollow ? 'Unfollow' : 'Follow';
+    const targetFollow = action !== 'unfollow';
+    const targetPrivate = action === 'follow_private';
+    const actionName = action === 'unfollow' ? 'Unfollow' : (targetPrivate ? 'FollowPrivate' : 'FollowPublic');
 
-    logger.debug(`[followOrCancel] Start. Action: ${action}, UserId: ${userId}`);
+    logger.debug(`[setFollowState] Start. Action: ${actionName}, UserId: ${userId}`);
 
     try {
-      if (this.isFollow) {
+      if (!targetFollow) {
         await pixiv.unfollowUser(userId);
-        this.isFollow = false;
-        if (this.userData.user) this.userData.user.is_followed = false;
       } else {
-        await pixiv.followUser(userId, 'public');
-        this.isFollow = true;
-        if (this.userData.user) this.userData.user.is_followed = true;
+        await pixiv.followUser(userId, targetPrivate ? 'private' : 'public');
       }
-      logger.debug(`[followOrCancel] Success. Action: ${action}`);
+      this.followLocalDirty = true;
+      this.isFollow = targetFollow;
+      this.isFollowPrivate = targetFollow && targetPrivate;
+      if (this.userData.user) this.userData.user.is_followed = targetFollow;
+      logger.debug(`[setFollowState] Success. Action: ${actionName}`);
     } catch (e) {
-      logger.error(`[followOrCancel] Failed: ${JSON.stringify(e)}`);
+      logger.error(`[setFollowState] Failed: ${JSON.stringify(e)}`);
       toastUtil.showToast({ message: "操作失败" });
     }
   }

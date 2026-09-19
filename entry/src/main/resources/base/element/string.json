@@ -73,6 +73,14 @@
       "value": "已关注"
     },
     {
+      "name": "follow_private",
+      "value": "私密关注"
+    },
+    {
+      "name": "follow_public",
+      "value": "公开关注"
+    },
+    {
       "name": "all",
       "value": "全部"
     },

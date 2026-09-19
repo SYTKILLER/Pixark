@@ -1,9 +1,9 @@
 import { request } from "@kit.BasicServicesKit";
 import { common } from '@kit.AbilityKit';
-import { fileUri, fileIo as fs } from "@kit.CoreFileKit";
+import { fileUri, fileIo as fs, picker } from "@kit.CoreFileKit";
 import { getDownloadRecordTable } from "../common/utils/database/impl/DownloadRecordTable";
 import DownloadRecordInfo from "../common/entity/DownloadRecordInfo";
-import { PixivIllust } from "../services/PixivTypes";
+import { PixivIllust, PixivNovel } from "../services/PixivTypes";
 import { createLogger } from "../common/utils/Logger";
 import { photoAccessHelper } from "@kit.MediaLibraryKit";
 import { toastUtil } from "../common/utils/ToastUtils";
@@ -383,6 +383,114 @@ export class DownloadsViewModel {
   }
 
 
+  /**
+   * 添加小说 TXT 记录：正文写入沙箱并登记到下载列表，然后通过系统下载目录接口导出。
+   * 小说内容由接口生成而非 URL 下载，因此不走 request.agent，直接以已完成状态入库。
+   */
+  async addNovelTask(context: common.Context, novel: PixivNovel, text: string) {
+    if (!this.downloadDir) await this.initDownLoad(context);
+    const db = getDownloadRecordTable(context);
+    const novelDir = `${context.filesDir}/Pixiv/Novels`;
+    try {
+      if (!fs.accessSync(novelDir)) fs.mkdirSync(novelDir, true);
+      const fileName = this._generateSafeNovelFileName(novel);
+      const filePath = `${novelDir}/${fileName}`;
+      const file = fs.openSync(filePath, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE | fs.OpenMode.TRUNC);
+      fs.writeSync(file.fd, text);
+      fs.closeSync(file);
+
+      // 同一本小说重复保存时复用已有记录，只重写沙箱文件并再次导出
+      let record = this.tasks.find(t => t.recordType === 'novel' && t.illust_id === novel.id);
+      if (!record) {
+        record = new DownloadRecordInfo();
+        record.task_id = `novel_${novel.id}_${Date.now()}`;
+        record.illust_id = novel.id;
+        record.title = novel.title;
+        record.artistName = novel.user?.name;
+        record.artist_avatar = novel.user?.profile_image_urls?.medium;
+        record.thumbnail = novel.image_urls?.medium || novel.image_urls?.square_medium || '';
+        record.recordType = 'novel';
+        record.filePath = filePath;
+        record.status = request.agent.State.COMPLETED;
+        record.progress = 100;
+        record.create_time = Date.now();
+        const rowId = await db.insert(record);
+        record.id = rowId;
+        this.tasks.unshift(record);
+      } else {
+        // 修复旧版本遗留的空路径记录（文件名由小说 id 决定，重复保存路径不变）
+        record.filePath = filePath;
+        record.status = request.agent.State.COMPLETED;
+        record.progress = 100;
+        await db.update(record);
+      }
+      await this.saveNovelToDevice(record);
+    } catch (e) {
+      logger.error("Add Novel Task Error", e);
+      toastUtil.showToast({ message: '保存失败' });
+    }
+  }
+
+  /** 通过系统下载目录（DOWNLOAD 模式）将小说 TXT 导出到公共 Download/包名/ 目录 */
+  async saveNovelToDevice(record: DownloadRecordInfo) {
+    if (!this.context) return;
+    if (!this.isFileInSandbox(record.filePath)) {
+      toastUtil.showToast({ message: "文件不存在或已保存" });
+      return;
+    }
+    const fileName = record.filePath.substring(record.filePath.lastIndexOf('/') + 1);
+    let targetPath = '';
+    try {
+      // DOWNLOAD 模式跳过文件选择界面，直接在 Download/包名/ 下保存，
+      // save() 返回的是该目录的 URI（具备持久化权限），newFileNames 等参数不生效
+      const documentSaveOptions = new picker.DocumentSaveOptions();
+      documentSaveOptions.pickerMode = picker.DocumentPickerMode.DOWNLOAD;
+      const documentViewPicker = new picker.DocumentViewPicker(this.context);
+      const saveResult: Array<string> = await documentViewPicker.save(documentSaveOptions);
+      if (!saveResult || saveResult.length === 0) {
+        logger.warn("saveNovelToDevice: save 返回为空");
+        return;
+      }
+      targetPath = new fileUri.FileUri(`${saveResult[0]}/${fileName}`).path;
+      fs.copyFileSync(record.filePath, targetPath);
+      // 导出成功后清理沙箱文件，与图片保存流程保持一致
+      await this.deleteFile(record.filePath);
+      toastUtil.showToast({ message: `已保存「${record.title || '未命名小说'}」到下载目录` });
+      this.refreshDisplayList();
+    } catch (e) {
+      // 真机出现过误报：内容已完整写入 Download/包名/ 后，copyFileSync 仍抛 13900001
+      // （copy_file.cpp IsAllPath）。以目标文件实际存在且非空为准，避免把成功报成失败
+      let savedAnyway = false;
+      if (targetPath !== '') {
+        try {
+          savedAnyway = fs.statSync(targetPath).size > 0;
+        } catch (err) {
+          savedAnyway = false;
+        }
+      }
+      if (savedAnyway) {
+        logger.warn("saveNovelToDevice: copyFileSync 抛错但目标文件已写入，按成功处理");
+        await this.deleteFile(record.filePath);
+        toastUtil.showToast({ message: `已保存「${record.title || '未命名小说'}」到下载目录` });
+        this.refreshDisplayList();
+        return;
+      }
+      logger.error(`saveNovelToDevice failed, code: ${e.code}, message: ${e.message}`);
+      toastUtil.showToast({ message: '保存到下载目录失败' });
+    }
+  }
+
+  /** 纯函数：生成小说 TXT 文件名 */
+  private _generateSafeNovelFileName(novel: PixivNovel): string {
+    const safeTitle = (novel.title || `novel_${novel.id}`)
+      .replace(/[\\/:*?"<>|.]+/g, '_')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .replace(/^_|_$/g, '') || `novel_${novel.id}`;
+    return `${safeTitle}_${novel.id}.txt`;
+  }
+
+
   private async getSysTask(id: string | undefined): Promise<request.agent.Task | undefined> {
     if (!id || !this.context) return undefined;
     try {
@@ -507,7 +615,8 @@ export class DownloadsViewModel {
    */
   private async trySaveIllustGroup(illustId: number | undefined) {
     if (illustId === undefined || illustId === null || this.savingIllustIds.has(illustId)) return;
-    const group = this.tasks.filter(d => d.illust_id === illustId);
+    // 只统计插画记录，避免小说记录（illust_id 存的是小说 id）被误归组保存到相册
+    const group = this.tasks.filter(d => d.illust_id === illustId && d.recordType !== 'novel');
     if (group.length === 0) return;
 
     const activeStates = [

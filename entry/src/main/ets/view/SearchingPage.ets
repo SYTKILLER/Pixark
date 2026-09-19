@@ -4,7 +4,7 @@ import { WaterFlowView } from '../components/WaterFlowView';
 import { SuggestionItem } from '../common/entity/SearchSuggestion';
 import { PixState } from '../entryability/AppState';
 import { toastUtil } from '../common/utils/ToastUtils';
-import { searchVM } from '../viewmodel/SearchViewModel';
+import { SearchViewModel, SearchingPageParams } from '../viewmodel/SearchViewModel';
 import { NaviContainer } from '../components/NaviContainer';
 import { PixivIllust, PixivNovel, SearchSort, SearchTarget, SearchR18Mode } from '../services/PixivTypes';
 import { appSettings } from '../common/entity/SettingsModel';
@@ -21,12 +21,14 @@ export function SearchingPageBuilder() {
 @ComponentV2
 export default struct SearchingPage {
 
+  /** 每个搜索页实例持有独立的 ViewModel，避免多级搜索互相覆盖结果 */
+  @Local vm: SearchViewModel = new SearchViewModel();
 
   @Local searchTypeSelectedIndex: number = 0;
   // 搜索框是否处于焦点状态：建议面板仅在真实输入时显示，
   // 过滤掉组件带初始值创建时程序赋值触发的 onChange
   @Local searchInputFocused: boolean = false;
-  // 筛选面板显示状态与草稿（确认后才写入 searchVM 并重新搜索）
+  // 筛选面板显示状态与草稿（确认后才写入 vm 并重新搜索）
   @Local showFilterSheet: boolean = false;
   @Local draftSort: SearchSort = 'popular_desc';
   @Local draftTarget: SearchTarget = 'partial_match_for_tags';
@@ -61,21 +63,21 @@ export default struct SearchingPage {
 
   /** 打开筛选面板时同步草稿 */
   private openFilterSheet() {
-    this.draftSort = searchVM.filterSort;
-    this.draftTarget = searchVM.filterTarget;
-    this.draftMinBookmark = searchVM.filterMinBookmark;
-    this.draftR18 = searchVM.filterR18;
+    this.draftSort = this.vm.filterSort;
+    this.draftTarget = this.vm.filterTarget;
+    this.draftMinBookmark = this.vm.filterMinBookmark;
+    this.draftR18 = this.vm.filterR18;
     this.showFilterSheet = true;
   }
 
   /** 确认筛选 */
   private confirmFilter() {
-    searchVM.filterSort = this.draftSort;
-    searchVM.filterTarget = this.draftTarget;
-    searchVM.filterMinBookmark = this.draftMinBookmark;
-    searchVM.filterR18 = this.draftR18;
+    this.vm.filterSort = this.draftSort;
+    this.vm.filterTarget = this.draftTarget;
+    this.vm.filterMinBookmark = this.draftMinBookmark;
+    this.vm.filterR18 = this.draftR18;
     this.showFilterSheet = false;
-    searchVM.applyFilters();
+    this.vm.applyFilters();
   }
 
   private pageInfos: NavPathStack = new NavPathStack();
@@ -100,20 +102,26 @@ export default struct SearchingPage {
         }, () => {
           this.pageInfos.pop(false)
         })
-        searchVM.keyword = ''
         return true;
       },
       onReady: (ctx) => {
         this.pageInfos = ctx.pathStack;
-        // 带关键词进入（点击标签/历史记录/推荐标签）时直接发起搜索，进入页面即加载结果
-        if (searchVM.keyword) {
-          searchVM.doSearch(true);
+        // 关键词通过路由参数按次传入，每个搜索页实例独立搜索、互不覆盖
+        const params = ctx?.pathInfo?.param as SearchingPageParams;
+        if (params?.keyword) {
+          this.vm.keyword = params.keyword;
+          this.vm.searchType = params.searchType ?? (appSettings.novel_mode ? 'novel' : 'illust');
+        } else {
+          this.vm.searchType = appSettings.novel_mode ? 'novel' : 'illust';
+        }
+        if (this.vm.keyword) {
+          this.vm.doSearch(true);
         }
       },
       onNaviDisAppear: () => {
         // 离开页面时清理建议面板状态，避免残留影响下次进入
-        searchVM.showSuggestions = false;
-        searchVM.suggestions = [];
+        this.vm.showSuggestions = false;
+        this.vm.suggestions = [];
       }
     })
   }
@@ -143,15 +151,14 @@ export default struct SearchingPage {
               curve: curves.interpolatingSpring(0, 1, 342, 38)
             }, () => {
               this.pageInfos.pop(false)
-              searchVM.keyword = ''
             })
           }
         })
-        Search({ value: searchVM.keyword!!, placeholder: $r('app.string.search_placeholder_2') })
+        Search({ value: this.vm.keyword!!, placeholder: $r('app.string.search_placeholder_2') })
           .transition(TransitionEffect.opacity(0.99))
           .geometryTransition('SEARCH_ID')
           // 已携带关键词进入（如点击标签/历史记录）时不聚焦弹键盘，直接展示搜索结果
-          .defaultFocus(!searchVM.keyword).height(40)
+          .defaultFocus(!this.vm.keyword).height(40)
           .focusOnTouch(true)
           .onFocus(() => {
             this.searchInputFocused = true
@@ -160,19 +167,19 @@ export default struct SearchingPage {
             this.searchInputFocused = false
           })
           .onSubmit(() => {
-            searchVM.handleSearchInput(searchVM.keyword, searchVM.searchType, true)
+            this.vm.handleSearchInput(this.vm.keyword, this.vm.searchType, true)
           })
           .layoutWeight(1)
           .id('SEARCH_ID')
           .onChange((value) => {
             // 仅响应聚焦状态下的真实输入，忽略组件初始化赋值触发的 onChange
             if (this.searchInputFocused) {
-              searchVM.updateSuggestions(value)
+              this.vm.updateSuggestions(value)
             }
           })
         // 筛选入口（画师搜索不支持筛选，隐藏）
-        if (searchVM.searchType !== 'user') {
-          if (searchVM.isFilterActive) {
+        if (this.vm.searchType !== 'user') {
+          if (this.vm.isFilterActive) {
             Badge({
               value: '',
               position: BadgePosition.RightTop,
@@ -191,10 +198,10 @@ export default struct SearchingPage {
         right: PixState.PageMarginValue
       }))
       // 建议列表（仅在搜索框聚焦输入时显示，避免覆盖搜索结果）
-      if (searchVM.showSuggestions && this.searchInputFocused && searchVM.suggestions.length > 0) {
+      if (this.vm.showSuggestions && this.searchInputFocused && this.vm.suggestions.length > 0) {
         Column() {
           List({ space: 1 }) {
-            ForEach(searchVM.suggestions, (item: SuggestionItem) => {
+            ForEach(this.vm.suggestions, (item: SuggestionItem) => {
               ListItem() {
                 Row() {
                   Text(item.text)
@@ -218,7 +225,7 @@ export default struct SearchingPage {
                   // 如果是普通关键词搜索，根据当前全局模式决定搜什么
                   type = appSettings.novel_mode ? 'novel' : 'illust';
                 }
-                searchVM.handleSearchInput(item.value, type, true);
+                this.vm.handleSearchInput(item.value, type, true);
               })
             }, (item: SuggestionItem) => `${item.type}_${item.value}`)
           }
@@ -241,11 +248,11 @@ export default struct SearchingPage {
             selectedIndex: this.searchTypeSelectedIndex!!,
             onItemClicked: (tab) => {
               if (tab == 0) {
-                searchVM.searchType = appSettings.novel_mode ? 'novel' : 'illust'
+                this.vm.searchType = appSettings.novel_mode ? 'novel' : 'illust'
               } else {
-                searchVM.searchType = 'user'
+                this.vm.searchType = 'user'
               }
-              searchVM.doSearch(false)
+              this.vm.doSearch(false)
             }
           })
         }
@@ -261,16 +268,16 @@ export default struct SearchingPage {
         }))
 
         if (this.searchTypeSelectedIndex == 0) {
-          if (searchVM.searchType === 'novel') {
+          if (this.vm.searchType === 'novel') {
             // 小说
             NovelListView({
               contentEndOffset: (PixState.TabBarVertical ? 125 : 160) + PixState.bottomRectHeight,
-              novelList: searchVM.resultNovels,
+              novelList: this.vm.resultNovels,
               onItemClick: (novel: PixivNovel) => {
-                searchVM.handleNovelClick(novel)
+                this.vm.handleNovelClick(novel)
               },
               onReachEnd: () => {
-                searchVM.loadMoreSearchResult()
+                this.vm.loadMoreSearchResult()
               }
             })
               .transition(TransitionEffect.asymmetric(
@@ -282,14 +289,14 @@ export default struct SearchingPage {
             // 插画
             WaterFlowView({
               contentEndOffset: (PixState.TabBarVertical ? 125 : 160) + PixState.bottomRectHeight,
-              illustList: searchVM.resultIllusts,
+              illustList: this.vm.resultIllusts,
               onCardClick: (illust) => {
-                searchVM.handleIllustClick(illust)
+                this.vm.handleIllustClick(illust)
               },
               onReachEnd: () => {
                 // 只有非测试环境且当前不处于加载中时、存在下一页数据会触发数据更新
                 if (!PixState.isTest) {
-                  searchVM.loadMoreSearchResult()
+                  this.vm.loadMoreSearchResult()
                 }
               }
             })
@@ -302,15 +309,15 @@ export default struct SearchingPage {
         } else {
           // 画师
           UserListView({
-            userPres: searchVM.resultUsers,
+            userPres: this.vm.resultUsers,
             contentEndOffset: (PixState.TabBarVertical ? 125 : 160) + PixState.bottomRectHeight,
             onButtonClick: (result: boolean, err?: string) => {
             },
             onImageClick: (illust: PixivIllust) => {
-              searchVM.handleIllustClick(illust)
+              this.vm.handleIllustClick(illust)
             },
             onReachEnd: () => {
-              searchVM.loadMoreSearchResult()
+              this.vm.loadMoreSearchResult()
             }
           })
             .transition(TransitionEffect.asymmetric(
@@ -340,8 +347,8 @@ export default struct SearchingPage {
               playMode: PlayMode.Normal,
             }, () => {
               this.searchTypeSelectedIndex = 1
-              searchVM.searchType = 'user'
-              searchVM.doSearch(false)
+              this.vm.searchType = 'user'
+              this.vm.doSearch(false)
             })
           }
         }),
@@ -357,8 +364,8 @@ export default struct SearchingPage {
               playMode: PlayMode.Normal,
             }, () => {
               this.searchTypeSelectedIndex = 0
-              searchVM.searchType = appSettings.novel_mode ? 'novel' : 'illust'
-              searchVM.doSearch(false)
+              this.vm.searchType = appSettings.novel_mode ? 'novel' : 'illust'
+              this.vm.doSearch(false)
             })
           }
         }),

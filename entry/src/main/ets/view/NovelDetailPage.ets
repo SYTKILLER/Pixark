@@ -1,3 +1,4 @@
+import { SearchingPageParams } from '../viewmodel/SearchViewModel';
 import { LengthMetrics, curves } from '@kit.ArkUI';
 import webview from '@ohos.web.webview';
 import { NovelDetailViewModel } from '../viewmodel/NovelDetailViewModel';
@@ -9,11 +10,11 @@ import { CommentPanel } from './CommentPanel';
 import { ColorUtils } from '../common/utils/ColorUtils';
 import { createLogger } from '../common/utils/Logger';
 import { getThemeConfig, ReadingTheme } from '../common/entity/NovelModel';
+import { NovelSeriesParams } from './NovelSeriesPage';
 import { NovelDetailParams } from '../common/entity/DetailEntity';
 import { UserDetailParams } from '../common/entity/UserDetailEntity';
 import { toastUtil } from '../common/utils/ToastUtils';
 import { UISettings, appSettings } from '../common/entity/SettingsModel';
-import { searchVM } from '../viewmodel/SearchViewModel';
 import { tagCollectionVM } from '../viewmodel/TagCollectionVM';
 import { EmptyStateView } from '../components/CommonWidgets';
 import { SymbolGlyphModifier } from '@kit.ArkUI';
@@ -341,13 +342,12 @@ struct NovelDetail {
         .constraintSize({ maxWidth: '100%' })
         .onClick(() => {
           // 点击标签直接以该标签为关键词搜索小说（用原始标签名保证 exact_match_for_tags 精确匹配），
-          // 搜索由搜索结果页 onReady 时发起
-          searchVM.keyword = tag.name;
-          searchVM.searchType = 'novel';
+          // 关键词经路由参数传入，由搜索结果页 onReady 时发起搜索
           toastUtil.animateTo({
             curve: curves.interpolatingSpring(0, 1, 342, 38)
           }, () => {
-            this.pageStack.pushPath({ name: 'searching_page' }, false);
+            const p: SearchingPageParams = { keyword: tag.name, searchType: 'novel' };
+            this.pageStack.pushPathByName('searching_page', p, false);
           })
         })
         .gesture(
@@ -429,6 +429,15 @@ struct NovelDetail {
     .width('100%')
     .borderRadius(12)
     .backgroundColor($r('sys.color.ohos_id_color_hover'))
+    .onClick(() => {
+      const series = this.vm!.novelInfo?.series;
+      if (!series) return;
+      const params: NovelSeriesParams = {
+        seriesId: series.id,
+        seriesTitle: series.title
+      };
+      this.pageStack.pushPathByName('novel_series', params, true);
+    })
   }
   // 评论入口
   @Builder

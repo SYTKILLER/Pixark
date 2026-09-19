@@ -140,15 +140,20 @@ class FollowViewModel {
           ]);
           page.nextUrlPublic = results[0].next_url || '';
           page.nextUrlPrivate = results[1].next_url || '';
+          // 按来源标注关注方式，供列表项显示 公开/私密 状态
+          (results[0].user_previews || []).forEach(u => u.restrict = 'public');
+          (results[1].user_previews || []).forEach(u => u.restrict = 'private');
           newData = [...(results[0].user_previews || []), ...(results[1].user_previews || [])];
         } else if (index === 1) {
           const res = await pixiv.getUserFollowing(userId, 'public', isLoadMore ? page.nextUrlPublic : undefined);
           page.nextUrlPublic = res.next_url || '';
           newData = res.user_previews || [];
+          newData.forEach(u => u.restrict = 'public');
         } else {
           const res = await pixiv.getUserFollowing(userId, 'private', isLoadMore ? page.nextUrlPrivate : undefined);
           page.nextUrlPrivate = res.next_url || '';
           newData = res.user_previews || [];
+          newData.forEach(u => u.restrict = 'private');
         }
         page.users = isLoadMore ? [...page.users, ...newData] : newData;
         page.loaded = true;

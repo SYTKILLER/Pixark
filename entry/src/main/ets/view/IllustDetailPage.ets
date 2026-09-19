@@ -1,10 +1,11 @@
+import { SearchingPageParams } from "../viewmodel/SearchViewModel";
 import { PixivImageComponent } from "../components/PixivImage";
-import { PixState } from "../entryability/AppState";
+import { PixState, _PixState } from "../entryability/AppState";
 import { GridColumnsTemplate } from "../common/utils/breakpoint/BreakPoint";
 import { IllustDetailViewModel } from "../viewmodel/IllustDetailViewModel";
 import { SnapShotUtils } from "../common/utils/SnapShotUtils";
 import { PixivIllust, PixivImage, PixivTag } from "../services/PixivTypes";
-import { LengthMetrics, curves } from "@kit.ArkUI";
+import { LengthMetrics, curves, window } from "@kit.ArkUI";
 import UIConstants from "../common/constants/UIConstants";
 import { homeViewModel } from "../viewmodel/HomeViewModel";
 import { DetailPageParams, IIllustSwiperProvider } from "../common/entity/DetailEntity";
@@ -19,7 +20,6 @@ import { CustomTransition } from "../common/utils/customtransition/CustomNavigat
 import { CardUtil } from "../common/utils/CardUtil";
 import { createLogger } from "../common/utils/Logger";
 import { CommentPanel } from "./CommentPanel";
-import { searchVM } from "../viewmodel/SearchViewModel";
 import { toastUtil } from "../common/utils/ToastUtils";
 import { tagCollectionVM } from "../viewmodel/TagCollectionVM";
 import { EmptyStateView } from "../components/CommonWidgets";
@@ -39,6 +39,8 @@ struct IllustDetail {
 
   @Local illustTitle: string = ''
   @Local showLargeImage: boolean = false
+  // 全屏看图器处于放大态：禁用外层 Swiper，避免横滑穿透导致切作品
+  @Local viewerZoomed: boolean = false
   @Local currentSwiperIndex: number = 0
 
   private pageStack: NavPathStack = new NavPathStack()
@@ -46,10 +48,37 @@ struct IllustDetail {
   private initialId: number = 0
   private sharedId: string = ''
   private longTakeAnimationProperties: LongTakeAnimationProperties = new LongTakeAnimationProperties();
+  // 看图沉浸前保存的系统栏属性，退出时原样恢复（兼容深浅色模式）
+  private savedBarProps: window.SystemBarProperties | undefined = undefined
+
+  /** 看图即沉浸：隐藏页面标题栏，系统栏转透明底白字；关闭时恢复 */
+  @Monitor('showLargeImage')
+  onShowLargeImageChange(): void {
+    const win: window.Window | undefined = _PixState.window
+    if (!win) return
+    try {
+      if (this.showLargeImage) {
+        this.savedBarProps = win.getWindowSystemBarProperties()
+        win.setWindowSystemBarProperties({
+          statusBarColor: '#00000000',
+          statusBarContentColor: '#FFFFFF',
+          navigationBarColor: '#00000000',
+          navigationBarContentColor: '#FFFFFF'
+        })
+      } else if (this.savedBarProps) {
+        win.setWindowSystemBarProperties(this.savedBarProps)
+        this.savedBarProps = undefined
+      }
+    } catch (err) {
+      logger.warn(` ImmersiveViewer`, `Failed to switch system bar properties: ${err}`)
+    }
+  }
 
   build() {
     NaviContainer({
       title: this.illustTitle,
+      // 看图即沉浸：隐藏页面标题栏，让全屏查看器铺满窗口
+      hideTitleBar: this.showLargeImage,
       content: () => { this.Content() },
       onReady: (ctx) => {
         this.pageStack = ctx.pathStack
@@ -58,6 +87,7 @@ struct IllustDetail {
       onBackPressed: () => {
         if (this.showLargeImage) {
           this.showLargeImage = false
+          this.viewerZoomed = false
           return true
         }
         return false
@@ -107,7 +137,13 @@ struct IllustDetail {
               sharedId: ri.item === this.initialId ? this.sharedId : '',
               pageStack: this.pageStack,
               showLargeImage: this.showLargeImage,
-              onImageLarge: (show) => { this.showLargeImage = show },
+              onImageLarge: (show) => {
+                this.showLargeImage = show
+                if (!show) {
+                  this.viewerZoomed = false
+                }
+              },
+              onViewerZoom: (zoomed) => { this.viewerZoomed = zoomed },
               onTitle: (title) => { this.illustTitle = title }
             })
           })
@@ -116,6 +152,7 @@ struct IllustDetail {
       .indicator(false)
       .loop(false)
       .cachedCount(0, false)
+      .disableSwipe(this.showLargeImage && this.viewerZoomed)
       .onChange((index: number) => {
         const total = this.swiperProvider?.illustIds.length || 0;
         // logger.debug(`[Swiper Log] >>> 滑动变化! 当前Index: ${index}, 列表总数:${total}, 当前ID: ${this.swiperProvider?.illustIds[index]}`);
@@ -131,7 +168,12 @@ struct IllustDetail {
         sharedId: this.sharedId,
         pageStack: this.pageStack,
         showLargeImage: this.showLargeImage,
-        onImageLarge: (show) => { this.showLargeImage = show },
+        onImageLarge: (show) => {
+          this.showLargeImage = show
+          if (!show) {
+            this.viewerZoomed = false
+          }
+        },
         onTitle: (title) => { this.illustTitle = title }
       })
         .width('100%')
@@ -169,6 +211,7 @@ struct IllustDetailContent {
   @Local menuTagName: string = ''
 
   @Event onImageLarge: (show: boolean) => void
+  @Event onViewerZoom: (zoomed: boolean) => void
   @Event onTitle: (title: string) => void
 
   async aboutToAppear(): Promise<void> {
@@ -301,6 +344,9 @@ struct IllustDetailContent {
           onShare: (url, index) => {},
           onBookmark: (index) => {
             this.iDV.bookmarkOrCancel(!this.iDV.isBookmarked)
+          },
+          onZoomChange: (zoomed) => {
+            this.onViewerZoom(zoomed)
           }
         })
           .transition(TransitionEffect.scale({ x: 0.92, y: 0.92 })
@@ -431,8 +477,12 @@ struct IllustDetailContent {
       UserItem({
         user: this.iDV.detailData?.user,
         isFollow: this.iDV.isFollow,
+        isFollowPrivate: this.iDV.isFollowPrivate,
         onButtonClick: (result: boolean, err?: string) => {
           this.iDV.followOrCancel(result, err)
+        },
+        onRestrictChange: (isPrivate: boolean) => {
+          this.iDV.isFollowPrivate = isPrivate
         }
       })
 
@@ -469,13 +519,12 @@ struct IllustDetailContent {
           .constraintSize({ maxWidth: '100%' })
           .onClick(() => {
             // 点击标签直接以该标签为关键词搜索（用原始标签名保证 exact_match_for_tags 精确匹配），
-            // 搜索由搜索结果页 onReady 时发起
-            searchVM.keyword = tag.name;
-            searchVM.searchType = 'illust';
+            // 关键词经路由参数传入，由搜索结果页 onReady 时发起搜索
             toastUtil.animateTo({
               curve: curves.interpolatingSpring(0, 1, 342, 38)
             }, () => {
-              this.pageStack.pushPath({ name: 'searching_page' }, false);
+              const p: SearchingPageParams = { keyword: tag.name, searchType: 'illust' };
+              this.pageStack.pushPathByName('searching_page', p, false);
             })
           })
           .gesture(

@@ -86,7 +86,8 @@ export struct Rank {
       .onClick(() => {
         _PixState.UIContext.showDatePickerDialog({
           start: new Date(2000, 0, 1),
-          end: new Date(2100, 11, 31),
+          // Pixiv 榜单按 JST 发布滞后一天，未发布日期选了也只会得到空列表
+          end: rankVM.latestAvailableDate(),
           selected: this.selectedDate,
           showTime: false,
           onDateAccept: (value: Date) => {

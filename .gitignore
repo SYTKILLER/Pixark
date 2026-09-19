@@ -31,3 +31,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ===== 本地打包产物 =====
+/dist

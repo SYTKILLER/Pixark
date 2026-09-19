@@ -66,8 +66,13 @@ export struct UserListView {
             UserItem({
               user: userPre.user,
               isFollow: userPre.user.is_followed,
+              isFollowPrivate: userPre.restrict === 'private',
               onButtonClick: (result: boolean, err?: string) => {
                 this.onButtonClick(result, err)
+              },
+              onRestrictChange: (isPrivate: boolean) => {
+                // 回写标注，保持列表数据与显示一致
+                userPre.restrict = isPrivate ? 'private' : 'public'
               }
             })
             .padding(5)

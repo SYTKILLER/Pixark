@@ -134,6 +134,32 @@ export class PixivData {
   }
 
   /**
+   * 列表响应统一过滤（屏蔽词 + 空页追载），与 fetchListWithFilter 行为一致，用于需要先拿到原始响应打日志的场景
+   */
+  private async filterListResult(
+    url: string,
+    data: PixivListResult,
+    kind: 'illusts' | 'novels'
+  ): Promise<PixivListResult> {
+    let items = kind === 'illusts'
+      ? tagCollectionService.filterIllusts(data.illusts || [])
+      : tagCollectionService.filterNovels(data.novels || []);
+    let cursor = data.next_url || null;
+    let hops = 0;
+    while (items.length === 0 && cursor && hops < 2) {
+      const next = await this.fetchApi<PixivListResult>(url, undefined, cursor);
+      items = kind === 'illusts'
+        ? tagCollectionService.filterIllusts(next.illusts || [])
+        : tagCollectionService.filterNovels(next.novels || []);
+      cursor = next.next_url || null;
+      hops++;
+    }
+    return kind === 'illusts'
+      ? { illusts: items as PixivIllust[], next_url: cursor }
+      : { novels: items as PixivNovel[], next_url: cursor };
+  }
+
+  /**
    * 插画排行榜
    */
   async getRanking(
@@ -142,7 +168,11 @@ export class PixivData {
     nextUrl?: string
   ): Promise<PixivListResult> {
     const params = { mode, date, filter: 'for_android' };
-    return this.fetchListWithFilter('/v1/illust/ranking', params, nextUrl, 'illusts');
+    logger.debug(`[getRanking] 请求参数: ${JSON.stringify(params)}`);
+    const raw = await this.fetchApi<PixivListResult>('/v1/illust/ranking', params, nextUrl);
+    const rawMap = raw as object as Record<string, Object>;
+    logger.debug(`[getRanking] 原始响应: illusts=${raw?.illusts?.length ?? 'null'}, next=${!!raw?.next_url}, error=${JSON.stringify(rawMap?.['error'])}`);
+    return this.filterListResult('/v1/illust/ranking', raw, 'illusts');
   }
 
   /**

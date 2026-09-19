@@ -35,6 +35,10 @@ export class IllustDetailViewModel implements IIllustSwiperProvider {
   @Trace isBookmarked: boolean = false
   // 关注状态
   @Trace isFollow: boolean = false
+  // 关注方式（仅 isFollow 为 true 时有意义）：由 follow-detail 接口校正
+  @Trace isFollowPrivate: boolean = false
+  // 用户手动操作过关注后置位，跳过 follow-detail 异步校正，防止状态回跳
+  private followLocalDirty: boolean = false
 
   // 当前浏览的大图索引（瀑布流列表索引）
   @Trace currentIndex: number = 0;
@@ -82,6 +86,8 @@ export class IllustDetailViewModel implements IIllustSwiperProvider {
       if (this.detailData) {
         if (this.detailData.user) {
           this.isFollow = this.detailData.user.is_followed;
+          // follow-detail 校正关注方式（公开/私密）：失败静默，保持 is_followed 兜底
+          this.syncFollowDetail(this.detailData.user.id);
         }
         this.isBookmarked = !!this.detailData.is_bookmarked;
       }
@@ -231,8 +237,25 @@ export class IllustDetailViewModel implements IIllustSwiperProvider {
     }
   }
 
+  /** 查询作者关注详情，精确校正 isFollow 与公开/私密状态（失败静默） */
+  private async syncFollowDetail(userId: number) {
+    try {
+      const detail = await pixiv.getUserFollowDetail(userId);
+      if (this.followLocalDirty) return; // 用户已手动操作，以本地为准
+      this.isFollow = detail.is_followed;
+      this.isFollowPrivate = detail.is_followed && detail.restrict === 'private';
+      if (this.detailData?.user && this.detailData.user.id === userId) {
+        this.detailData.user.is_followed = detail.is_followed;
+      }
+      logger.debug(`syncFollowDetail: userId=${userId}, isFollowed=${detail.is_followed}, restrict=${detail.restrict}`);
+    } catch (e) {
+      logger.debug(`syncFollowDetail failed: ${JSON.stringify(e)}`);
+    }
+  }
+
   // 关注/取消关注 (本地状态同步)
   async followOrCancel(result: boolean, err?: string) {
+    this.followLocalDirty = true;
     this.isFollow = result;
     if (this.detailData)
     this.detailData.user.is_followed = result;
@@ -260,9 +283,12 @@ export class IllustDetailViewModel implements IIllustSwiperProvider {
         // 收藏后关注画师
         if (appSettings.follow_after_collecting && !this.detailData.user.is_followed) {
           try {
-            await pixiv.followUser(this.detailData.user.id, appSettings.private_collecting ? 'private' : 'public');
+            const restrict = appSettings.private_collecting ? 'private' : 'public';
+            await pixiv.followUser(this.detailData.user.id, restrict);
+            this.followLocalDirty = true;
             this.detailData.user.is_followed = true;
             this.isFollow = true;
+            this.isFollowPrivate = restrict === 'private';
           } catch (followErr) {
             logger.error(`自动关注失败: ${JSON.stringify(followErr)}`);
           }

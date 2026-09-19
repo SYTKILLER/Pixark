@@ -7,6 +7,16 @@ import { JumpUtil } from "../../common/utils/JumpUtils"
 import { toastUtil } from "../../common/utils/ToastUtils"
 import { AppConstants } from "../../common/constants/AppConstants"
 import UIConstants from '../../common/constants/UIConstants';
+import axios, { AxiosResponse } from '@ohos/axios';
+
+/**
+ * GitHub Releases 接口返回中本功能用到的字段
+ */
+interface GithubReleaseInfo {
+  tag_name?: string
+  html_url?: string
+  body?: string
+}
 
 @Builder
 export function AboutPageBuilder() {
@@ -84,8 +94,7 @@ struct AboutPage {
         id: 'check_update',
         subtitle: _PixState.appVersion,
         onChange: () => {
-          // TODO: 检查更新逻辑
-          toastUtil.showToast({ message: '正在检查更新...' })
+          this.checkUpdate()
         }
       }),
 
@@ -123,7 +132,7 @@ struct AboutPage {
         subtitle: $r('app.string.project_maintenance'),
         type: ItemActionType.ROUTER,
         id: 'contributor_xhxyt',
-        onChange: () => { JumpUtil.goToWeb(AppConstants.GITHUB_OWNER_URL) }
+        onChange: () => { JumpUtil.goToWeb('https://github.com/XHXYT') }
       }),
       new CustomItemInfo({
         icon: $rawfile('March.png'),
@@ -216,6 +225,76 @@ struct AboutPage {
         }
       })
     ]
+  }
+
+  /**
+   * 检查更新：请求本项目仓库的最新 Release，与当前版本号比较
+   */
+  private async checkUpdate() {
+    toastUtil.showToast({ message: '正在检查更新...' })
+    try {
+      const headers: Record<string, string> = { 'Accept': 'application/vnd.github+json' }
+      const response: AxiosResponse<GithubReleaseInfo> = await axios.get<GithubReleaseInfo>(
+        AppConstants.GITHUB_RELEASES_API_URL,
+        {
+          headers: headers,
+          timeout: 15000
+        }
+      )
+      const release: GithubReleaseInfo = response.data
+      const remoteTag = release.tag_name
+      if (!remoteTag) {
+        throw new Error('[CheckUpdate] release tag_name 为空')
+      }
+      if (AboutPage.isNewerVersion(remoteTag, _PixState.appVersion)) {
+        this.showUpdateDialog(remoteTag, release)
+      } else {
+        toastUtil.showToast({ message: '当前已是最新版本' })
+      }
+    } catch (error) {
+      console.error(`[CheckUpdate] 检查更新失败: ${JSON.stringify(error)}`)
+      toastUtil.showToast({ message: '检查更新失败，请检查网络后重试' })
+    }
+  }
+
+  /**
+   * 比较语义化版本号（兼容 v 前缀），判断远端是否比本地新
+   */
+  private static isNewerVersion(remote: string, local: string): boolean {
+    const parse = (version: string): number[] =>
+      version.replace(/^[vV]/, '').split('.').map((part) => parseInt(part, 10) || 0)
+    const remoteParts = parse(remote)
+    const localParts = parse(local)
+    for (let i = 0; i < 3; i++) {
+      const r = remoteParts[i] ?? 0
+      const l = localParts[i] ?? 0
+      if (r !== l) {
+        return r > l
+      }
+    }
+    return false
+  }
+
+  /**
+   * 展示新版本弹窗，确认后跳转浏览器打开 Release 页
+   */
+  private showUpdateDialog(remoteTag: string, release: GithubReleaseInfo) {
+    const newVersion = remoteTag.replace(/^[vV]/, '')
+    const releaseUrl = release.html_url ?? AppConstants.GITHUB_RELEASES_URL
+    const notes = (release.body ?? '').trim()
+    const message = notes.length > 0
+      ? (notes.length > 300 ? `${notes.substring(0, 300)}...` : notes)
+      : '请前往发布页下载最新版本。'
+    toastUtil.showAlertDialog({
+      title: `发现新版本 ${newVersion}`,
+      message: message,
+      alignment: DialogAlignment.Center,
+      primaryButton: { value: '取消', action: () => {} },
+      secondaryButton: {
+        value: '更新',
+        action: () => { JumpUtil.goToWeb(releaseUrl) }
+      }
+    })
   }
 
   build() {

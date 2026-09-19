@@ -1,10 +1,10 @@
+import { SearchingPageParams } from "../../viewmodel/SearchViewModel";
 import { PixState } from "../../entryability/AppState";
 import { NaviContainer } from "../../components/NaviContainer";
 import { EmptyStateView } from "../../components/CommonWidgets";
 import { tagCollectionVM } from "../../viewmodel/TagCollectionVM";
 import { KeywordGroup, KeywordView } from "../../viewmodel/TagCollectionVM";
 import { TAG_TYPE_FAVORITE } from "../../common/utils/TagCollectionService";
-import { searchVM } from "../../viewmodel/SearchViewModel";
 import { toastUtil } from "../../common/utils/ToastUtils";
 import { ColorUtils } from "../../common/utils/ColorUtils";
 import { UISettings } from "../../common/entity/SettingsModel";
@@ -248,13 +248,12 @@ struct KeywordListPage {
                 }
                 .onClick(() => {
                   if (this.type === TAG_TYPE_FAVORITE && row.keyword) {
-                    // 收藏关键词点击跳转搜索（与详情页标签行为一致）
-                    searchVM.keyword = row.keyword.name;
-                    searchVM.searchType = 'illust';
+                    // 收藏关键词点击跳转搜索（与详情页标签行为一致），关键词经路由参数传入
                     toastUtil.animateTo({
                       curve: curves.interpolatingSpring(0, 1, 342, 38)
                     }, () => {
-                      this.pageStack.pushPath({ name: 'searching_page' }, false);
+                      const p: SearchingPageParams = { keyword: row.keyword!.name, searchType: 'illust' };
+                      this.pageStack.pushPathByName('searching_page', p, false);
                     })
                   }
                 })

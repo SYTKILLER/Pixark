@@ -24,7 +24,7 @@ struct WebLoginPageComponent {
   webviewController: webview.WebviewController = new webview.WebviewController();
 
   // URL 相关
-  private loginUrl: string = ''
+  @Local loginUrl: string = '' // 生成完毕才条件渲染 Web，规避空 URL 竞态
   private codeVerifier: string = '';
   private pageStack: NavPathStack = new NavPathStack()
 
@@ -49,7 +49,8 @@ struct WebLoginPageComponent {
       this.loginUrl = `https://app-api.pixiv.net/web/v1/login?code_challenge=${codeChallenge}&code_challenge_method=S256&client=pixiv-android&redirect_uri=${encodeURIComponent(AppConstants.REDIRECT_URI)}&state=login`;
 
       logger.info(`Loading Pixiv Login URL: ${this.loginUrl}`);
-      this.isLoadingLogin = false;
+      // 保持遮罩，等 Web 的 onPageBegin/onError 接管，避免加载间隙露出白屏
+      this.loadMessage = '正在加载登录页面...';
     } catch (error) {
       logger.error(`初始化失败: `, error);
       this.loadMessage = '初始化失败，请重试';
@@ -72,80 +73,81 @@ struct WebLoginPageComponent {
   @Builder
   Content() {
     Stack({ alignContent: Alignment.Top }) {
-      // WebView
-      Web({ src: this.loginUrl, controller: this.webviewController })
-        .domStorageAccess(true)
-        .javaScriptAccess(true)
-        .cacheMode(CacheMode.Default)
-        .mixedMode(MixedMode.All)
-        .fileAccess(true)
-        .onlineImageAccess(true)
-        .onAppear(() => {
-          try {
-            this.webviewController.loadUrl(this.loginUrl)
-          } catch (error) {
-            logger.error(`loadUrl ErrorCode: ${(error as BusinessError).code},  Message: ${(error as BusinessError).message}`);
-          }
-        })
-        .onPageBegin((event) => {
-          const url = event.url;
-          logger.info(`Page Begin Loading: ${url}`);
+      // WebView：loginUrl 就绪后才创建，避免 async 初始化未完成就挂载出空 URL 白屏
+      if (this.loginUrl !== '') {
+        Web({ src: this.loginUrl, controller: this.webviewController })
+          .domStorageAccess(true)
+          .javaScriptAccess(true)
+          .cacheMode(CacheMode.Default)
+          .mixedMode(MixedMode.All)
+          .fileAccess(true)
+          .onlineImageAccess(true)
+          .onControllerAttached(() => {
+            logger.info("onControllerAttached");
+            try {
+              this.webviewController.setCustomUserAgent('Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36');
+              // 先设好移动端 UA 再拉起登录页，保证请求头正确
+              this.webviewController.loadUrl(this.loginUrl);
+            } catch (error) {
+              logger.error(`ErrorCode: ${(error as BusinessError).code},  Message: ${(error as BusinessError).message}`);
+            }
+          })
+          .onPageBegin((event) => {
+            const url = event.url;
+            logger.info(`Page Begin Loading: ${url}`);
 
-          // 检测到 Pixiv 回调，开始处理登录
-          if (url.startsWith('pixiv://account/login')) {
-            logger.info(`Pixiv custom scheme callback detected, url: ${url}`);
-            this.isLoadingPage = false; // 停止页面加载提示
-            this.handleCallback(url);
-            return;
-          }
+            // 检测到 Pixiv 回调，开始处理登录
+            if (url.startsWith('pixiv://account/login')) {
+              logger.info(`Pixiv custom scheme callback detected, url: ${url}`);
+              this.isLoadingPage = false; // 停止页面加载提示
+              this.handleCallback(url);
+              return;
+            }
 
-          // 其他页面开始加载
-          this.isLoadingPage = true;
-          this.loadMessage = '正在加载登录页面...';
-        })
-        .onPageEnd((event) => {
-          logger.info(`Page End Loading: ${event.url}`);
-          this.isLoadingPage = false;
-          this.loadMessage = '加载完成';
-        })
-        .onControllerAttached(() => {
-          logger.info("onControllerAttached");
-          try {
-            this.webviewController.setCustomUserAgent('Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36');
-          } catch (error) {
-            logger.error(`ErrorCode: ${(error as BusinessError).code},  Message: ${(error as BusinessError).message}`);
-          }
-        })
-        .onProgressChange((event) => {
-          this.loadProgress = event.newProgress;
-          // 只在有进度变化时更新提示
-          if (event.newProgress > 0 && event.newProgress < 100) {
-            this.loadMessage = `正在加载... ${event.newProgress}%`;
-          }
-        })
-        .onErrorReceive((event) => {
-          const errorInfo = event.error;
-          const url = event.request?.getRequestUrl() || '';
-          logger.error(`WebView Error - Code: ${errorInfo.getErrorCode()}, Message: ${errorInfo.getErrorInfo()}, URL: ${url}`);
+            // 其他页面开始加载
+            this.isLoadingLogin = false;
+            this.isLoadingPage = true;
+            this.loadMessage = '正在加载登录页面...';
+          })
+          .onPageEnd((event) => {
+            logger.info(`Page End Loading: ${event.url}`);
+            this.isLoadingLogin = false;
+            this.isLoadingPage = false;
+            this.loadMessage = '加载完成';
+          })
+          .onProgressChange((event) => {
+            this.loadProgress = event.newProgress;
+            // 只在有进度变化时更新提示
+            if (event.newProgress > 0 && event.newProgress < 100) {
+              this.loadMessage = `正在加载... ${event.newProgress}%`;
+            }
+          })
+          .onErrorReceive((event) => {
+            const errorInfo = event.error;
+            const url = event.request?.getRequestUrl() || '';
+            logger.error(`WebView Error - Code: ${errorInfo.getErrorCode()}, Message: ${errorInfo.getErrorInfo()}, URL: ${url}`);
 
-          // 忽略 pixiv:// 协议的错误（这是正常的）
-          if (url.startsWith('pixiv://')) {
-            return;
-          }
+            // 忽略 pixiv:// 协议的错误（这是正常的）
+            if (url.startsWith('pixiv://')) {
+              return;
+            }
 
-          this.isLoadingPage = false;
+            this.isLoadingLogin = false;
+            this.isLoadingPage = false;
 
-          // 只有非预期的错误才显示 Toast
-          if (this.loginUrl && errorInfo.getErrorCode() !== -302) {
-            toastUtil.showToast({ message: `WebView 错误: ${errorInfo.getErrorInfo()}` });
-          }
-        })
-        .onHttpErrorReceive((event) => {
-          logger.error(`HTTP Error - Message: ${event.response.getReasonMessage()}, Status:${event.response.getResponseCode()}`);
-          this.isLoadingPage = false;
-        })
-        .width('100%')
-        .layoutWeight(1);
+            // 只有非预期的错误才显示 Toast
+            if (this.loginUrl && errorInfo.getErrorCode() !== -302) {
+              toastUtil.showToast({ message: `WebView 错误: ${errorInfo.getErrorInfo()}` });
+            }
+          })
+          .onHttpErrorReceive((event) => {
+            logger.error(`HTTP Error - Message: ${event.response.getReasonMessage()}, Status:${event.response.getResponseCode()}`);
+            this.isLoadingLogin = false;
+            this.isLoadingPage = false;
+          })
+          .width('100%')
+          .layoutWeight(1);
+      }
 
       // 加载提示遮罩
       if (this.isLoadingPage || this.isLoadingLogin) {
