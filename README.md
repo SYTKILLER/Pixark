@@ -1,5 +1,21 @@
 <div align="center">
 
+## 🚚 项目已迁移 · This project has moved
+
+**Pixark 已更名为 PixLume，本仓库不再维护。**
+
+新版本与后续更新请前往 👉 **[SYTKILLER/PixLume](https://github.com/SYTKILLER/PixLume)**
+
+[![Release](https://img.shields.io/github/v/release/SYTKILLER/PixLume?logo=github&label=PixLume%20Release)](https://github.com/SYTKILLER/PixLume/releases/latest)
+
+感谢一路以来的支持 🙏 本项目将作为 PixLume 的前身保留在其致谢名单中。
+
+---
+
+</div>
+
+<div align="center">
+
 # Pixark
 
 > 一款为 HarmonyOS 开发的原生轻量级 Pixiv 第三方客户端
